@@ -116,21 +116,6 @@
       </div>
     </td>
     <td align="center" style="border: 1px solid #555;">
-      <img src="defay_1x9/pics_readme/Anchous.jpg" width="100" height="100" style="border-radius: 50%" alt="avatar"><br />
-      <b>Анна Штеренфельд</b><br />
-      <sub><i>Frontend разработчик</i></sub>
-      <hr style="border: 1px solid #555; margin: 10px 0;">
-      <div align="left">
-      <b>Вклад в проект:</b><br />
-      • Frontend разработка<br />
-      • Концепт-арты<br />
-      • UI/UX дизайн
-      <hr style="border: 1px solid #555; margin: 10px 0;">
-      <b>Контакты:</b><br />
-      <a href="https://github.com/mbhopper">GitHub</a> • <a href="https://t.me/mbhopper">Telegram</a>
-      </div>
-    </td>
-    <td align="center" style="border: 1px solid #555;">
       <img src="defay_1x9/pics_readme/Gitler_prime.jpg" width="100" height="100" style="border-radius: 50%" alt="avatar"><br />
       <b>Максим Землянский</b><br />
       <sub><i>Pintester</i></sub>
@@ -142,20 +127,6 @@
       <hr style="border: 1px solid #555; margin: 10px 0;">
       <b>Контакты:</b><br />
       <a href="https://github.com/kusotsu">GitHub</a> • <a href="https://t.me/kusotsutar">Telegram</a>
-      </div>
-    </td>
-    <td align="center" style="border: 1px solid #555;">
-      <img src="defay_1x9/pics_readme/artem228.jpg" width="100" height="100" style="border-radius: 50%" alt="avatar"><br />
-      <b>Артём Абдюков</b><br />
-      <sub><i>Backend разработчик</i></sub>
-      <hr style="border: 1px solid #555; margin: 10px 0;">
-      <div align="left">
-      <b>Вклад в проект:</b><br />
-      • Работа с базами данных <br />
-      • Разработка backend части
-      <hr style="border: 1px solid #555; margin: 10px 0;">
-      <b>Контакты:</b><br />
-      <a href="https://github.com/smetanyy">GitHub</a> • <a href="https://t.me/tem_702">Telegram</a>
       </div>
     </td>
   </tr>
