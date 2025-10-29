@@ -36,6 +36,15 @@
 - `di` связывает реализации и интерфейсы между всеми слоями, но сами пакеты не зависят от `di`.
 - `util` доступен как вспомогательный пакет для всех остальных уровней.
 
+## Интерфейсы и границы
+
+| Интерфейс | Владелец | Основные методы | Направление зависимостей |
+|-----------|----------|-----------------|--------------------------|
+| `GameSessionGateway` | `domain` | `startNewSession`, `submitMove`, `observeSession` | `ui` вызывает `domain`, `data` реализует контракт |
+| `PlayerProfileRepository` | `domain` | `getProfile`, `updateProfile` | `ui`/`domain` используют, `data` предоставляет реализацию |
+| `LeaderboardRepository` | `domain` | `getLeaderboard`, `refreshLeaderboard` | `ui`/`domain` используют, `data` реализует с доступом к сетевым и локальным источникам |
+| `AuthGateway` | `domain` | `authenticate`, `logout`, `restoreSession` | `ui`/`integration` зависят от `domain`, реализации находятся в `data` |
+
 ## Диаграмма зависимостей
 
 ```mermaid
