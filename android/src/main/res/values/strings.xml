@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Zazeks</string>
+    <string name="menu_title">Главное меню</string>
+    <string name="game_title">Игра</string>
+    <string name="results_title">Результаты</string>
+    <string name="menu_start_new">Новая игра</string>
+    <string name="menu_resume">Продолжить</string>
+    <string name="menu_results">Результаты</string>
+    <string name="menu_last_result_placeholder">Пока нет завершённых партий</string>
+    <string name="menu_last_result_format">Последняя партия: %1$s</string>
+    <string name="game_current_player">Ход игрока: %1$s</string>
+    <string name="game_turn">Ход #%1$d</string>
+    <string name="game_completion">Партия завершена</string>
+    <string name="game_draw">Ничья</string>
+    <string name="game_winner_format">Победитель: %1$s</string>
+    <string name="game_session_format">Сессия: %1$s</string>
+    <string name="game_quit">В меню</string>
+    <string name="results_session_label">Сессия: %1$s</string>
+    <string name="results_turns_label">Ходов: %1$d</string>
+    <string name="results_winner_label">Победитель: %1$s</string>
+    <string name="results_draw_label">Итог: ничья</string>
+    <string name="results_back_to_menu">В меню</string>
+    <string name="results_new_game">Сыграть снова</string>
+    <string name="results_empty_state">Завершённых партий пока нет</string>
+    <string name="error_retry">Повторить</string>
+</resources>

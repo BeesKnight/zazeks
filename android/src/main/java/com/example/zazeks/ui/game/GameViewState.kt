@@ -1,5 +1,8 @@
 package com.example.zazeks.ui.game
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
 /**
  * Representation of the game screen state that the UI observes via LiveData.
  */
@@ -19,10 +22,12 @@ sealed class ViewState {
 /**
  * UI friendly model of the game session, already formatted for rendering.
  */
+@Parcelize
 data class GameUiModel(
     val sessionId: String,
     val boardRows: List<String>,
-    val currentPlayerLabel: String,
-    val turnLabel: String,
-    val completionLabel: String?
-)
+    val currentPlayer: String,
+    val turnCount: Int,
+    val isCompleted: Boolean,
+    val winner: String?
+) : Parcelable
