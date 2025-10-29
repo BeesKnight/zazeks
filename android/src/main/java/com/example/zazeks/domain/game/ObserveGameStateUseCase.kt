@@ -16,4 +16,8 @@ class ObserveGameStateUseCase(
  */
 interface GameEngine {
     fun observeGame(): Flow<GameResult<GameSnapshot>>
+    suspend fun startNewGame(): GameResult<GameSnapshot>
+    suspend fun resumeLastGame(): GameResult<GameSnapshot>
+    suspend fun playMove(row: Int, column: Int): GameResult<GameSnapshot>
+    suspend fun abandonGame()
 }

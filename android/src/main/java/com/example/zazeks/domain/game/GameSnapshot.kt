@@ -8,5 +8,6 @@ data class GameSnapshot(
     val board: List<String>,
     val currentPlayer: String,
     val turn: Int,
-    val isCompleted: Boolean
+    val isCompleted: Boolean,
+    val winner: String?
 )
