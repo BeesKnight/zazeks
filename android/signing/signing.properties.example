@@ -1,0 +1,6 @@
+# Copy this file to signing.properties and update the values below with your keystore info.
+# The path can be absolute or relative to the android/ directory.
+storeFile=signing/my-release-key.jks
+storePassword=changeit
+keyAlias=my-key-alias
+keyPassword=changeit

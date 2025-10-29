@@ -5,3 +5,8 @@ backend/src/__pycache__
 /venv
 model/dataset
 /.idea
+
+# Android signing artifacts (keystores should not be committed)
+android/signing/*.jks
+android/signing/signing.properties
+!android/signing/signing.properties.example
