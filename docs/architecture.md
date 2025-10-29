@@ -125,3 +125,41 @@ graph TD
   - `GameError.SessionExpired` → полноэкранное состояние "Сессия завершена" с переходом «В главное меню», отключающее интерактивность партии.
 - **Логирование и аналитика.** Каждое действие ошибки сопровождается `analyticsTag`, что упрощает агрегацию статистики по отказам и сценариям восстановления.
 
+## Последовательность запроса и ответа
+
+```plantuml
+@startuml
+actor Player
+participant "UI\n(GameScreen)" as UI
+participant "ViewModel\n(GameViewModel)" as VM
+participant "UseCase\nSubmitMoveUseCase" as UC
+participant "Repository\nGameSessionRepository" as Repo
+participant "Remote API\n/Game Engine" as API
+
+Player -> UI: tap "Make move"
+UI -> VM: onUserMove(cell)
+VM -> UC: execute(move)
+UC -> Repo: submitMove(move)
+Repo -> API: POST /session/{id}/move
+API --> Repo: 200 OK + UpdatedBoard
+Repo --> UC: GameSnapshot
+UC --> VM: GameResult.Success(snapshot)
+VM -> UI: render(GameState.from(snapshot))
+UI --> Player: show updated board
+API --> Repo: push GameEvent(checkmate)
+Repo --> VM: notify(GameEvent)
+VM -> UI: render(GameState.withEvent)
+UI --> Player: show victory banner
+@enduml
+```
+
+## Обработка обратных событий и обновление UI
+
+- **Источник событий.** После успешного запроса `GameSessionRepository` подписан на серверный поток (SSE/WebSocket). Когда модель публикует push-событие (`GameEvent`), репозиторий преобразует его в доменный тип и отправляет через `observeSession()`.
+- **Маршрут доставки.** `GameViewModel` подписывается на `observeSession()` в `init` и объединяет ответы запросов (`submitMove`, `refreshBoard`) с обратными событиями. Для каждого `GameEvent` формируется `UiEffect` (баннеры, таймеры) и обновлённый `ViewState`.
+- **Обновление интерфейса.** UI-слой (Activity/Fragment) наблюдает `LiveData<ViewState>` и `LiveData<UiEffect>`. После получения события интерфейс:
+  1. обновляет визуальные компоненты (доска, списки ходов, таймер);
+  2. отображает соответствующие уведомления (например, всплывающее сообщение о победе);
+  3. при необходимости отключает элементы управления (например, блокирует кнопки хода при завершении партии).
+- **Обработка ошибок push-событий.** В случае разрыва соединения `GameSessionRepository` инициирует восстановление подписки и эмитит `GameEvent.ConnectionLost`. ViewModel отображает состояние «Повторное подключение» и инициирует повторное `refreshBoard` после восстановления канала.
+
