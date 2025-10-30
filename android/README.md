@@ -4,9 +4,10 @@ This guide walks through preparing, configuring, and testing the Android client 
 
 ## Prerequisites
 
-- Android Studio Iguana (or newer) **or** the Android command-line tools with Gradle 8.5+
-- Android SDK 34 with platform tools and at least one emulator image (Android 7.0+ supported)
-- Java 17 (use the JDK bundled with Android Studio or Temurin 17)
+- Android Studio Iguana (или новее) **или** установленный Gradle 8.7+
+- Android SDK 34, платформа-инструменты и эмулятор/устройство с Android 7.0+
+- Java 17 (рекомендуется использовать комплект JDK, поставляемый с Android Studio)
+
 
 ## Project structure
 
@@ -94,5 +95,10 @@ When the ML pipeline is reattached, the `/model/detect` endpoint will return rea
 
 ## VS Code tips
 
-See the root `README.md` for VS Code automation, including tasks for `./gradlew assembleDebug` and device debugging.
+1. Убедитесь, что Java backend запущен и доступен по адресу, указанному в `backend.json` (по умолчанию `http://10.0.2.2:8080`).
+2. Запустите приложение и выберите «Новая игра» в главном меню.
+3. Нажмите «Старт» — камера активируется и начнёт отправлять кадры в backend.
+4. Показывайте жесты «камень», «ножницы» или «бумага» перед камерой.
+5. Наблюдайте за результатами раунда и статистикой побед в приложении.
+6. Для завершения сеанса вернитесь в главное меню и откройте «Результаты».
 

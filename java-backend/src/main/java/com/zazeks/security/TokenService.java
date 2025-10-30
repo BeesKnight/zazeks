@@ -2,6 +2,8 @@ package com.zazeks.security;
 
 import com.zazeks.config.Settings;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.JwtParser;
@@ -52,15 +54,28 @@ public class TokenService {
     }
 
     public Claims parseClaims(String token) {
-        if (parser == null) {
-            synchronized (this) {
-                if (parser == null) {
-                    parser = Jwts.parserBuilder()
-                            .setSigningKey(signingKey())
-                            .build();
-                }
-            }
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(signingKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (JwtException ex) {
+            throw new IllegalArgumentException("Invalid JWT token", ex);
         }
-        return parser.parseClaimsJws(token).getBody();
+    }
+
+    public int extractUserId(String token) {
+        Claims claims = parseClaims(token);
+        Object subject = claims.get("sub");
+        if (subject == null) {
+            throw new IllegalArgumentException("Token does not contain subject claim");
+        }
+        try {
+            return Integer.parseInt(subject.toString());
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("Invalid subject claim", ex);
+        }
+
     }
 }

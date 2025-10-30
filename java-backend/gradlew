@@ -114,8 +114,70 @@ case "$( uname )" in                #(
   NONSTOP* )        nonstop=true ;;
 esac
 
-CLASSPATH="\\\"\\\""
+CLASSPATH="\"\""
 
+WRAPPER_JAR="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
+WRAPPER_BASE64="$WRAPPER_JAR.base64"
+WRAPPER_PROPERTIES="$APP_HOME/gradle/wrapper/gradle-wrapper.properties"
+
+if [ ! -f "$WRAPPER_JAR" ]; then
+    wrapperJarDir=${WRAPPER_JAR%/*}
+    mkdir -p "$wrapperJarDir" || die "Could not create $wrapperJarDir"
+
+    if [ -f "$WRAPPER_BASE64" ]; then
+        if command -v base64 >/dev/null 2>&1; then
+            base64 --decode "$WRAPPER_BASE64" > "$WRAPPER_JAR" || die "Could not decode $WRAPPER_BASE64"
+        elif command -v python3 >/dev/null 2>&1; then
+            python3 - "$WRAPPER_BASE64" "$WRAPPER_JAR" <<'PY'
+import base64
+import sys
+src, dst = sys.argv[1:3]
+with open(src, 'rb') as fh:
+    data = base64.b64decode(fh.read())
+with open(dst, 'wb') as fh:
+    fh.write(data)
+PY
+        elif command -v python >/dev/null 2>&1; then
+            python - "$WRAPPER_BASE64" "$WRAPPER_JAR" <<'PY'
+import base64
+import sys
+src, dst = sys.argv[1:3]
+with open(src, 'rb') as fh:
+    data = base64.b64decode(fh.read())
+with open(dst, 'wb') as fh:
+    fh.write(data)
+PY
+        else
+            die "gradle-wrapper.jar is missing and no base64 decoder is available to reconstruct it from $WRAPPER_BASE64"
+        fi
+    else
+        if [ ! -f "$WRAPPER_PROPERTIES" ]; then
+            die "Required file gradle/wrapper/gradle-wrapper.properties is missing."
+        fi
+
+        distributionUrl=$( grep '^distributionUrl=' "$WRAPPER_PROPERTIES" | tail -n 1 | cut -d= -f2- )
+        if [ -z "$distributionUrl" ]; then
+            die "Could not read distributionUrl from $WRAPPER_PROPERTIES"
+        fi
+
+        distributionUrl=${distributionUrl#*gradle-}
+        distributionVersion=${distributionUrl%%-*}
+        if [ -z "$distributionVersion" ]; then
+            die "Could not determine Gradle wrapper version from $WRAPPER_PROPERTIES"
+        fi
+
+        wrapperRepository="https://repo1.maven.org/maven2/org/gradle/gradle-wrapper"
+        wrapperDownloadUrl="$wrapperRepository/$distributionVersion/gradle-wrapper-$distributionVersion.jar"
+
+        if command -v curl >/dev/null 2>&1; then
+            curl --fail --location --silent --show-error --output "$WRAPPER_JAR" "$wrapperDownloadUrl" || die "Could not download $wrapperDownloadUrl"
+        elif command -v wget >/dev/null 2>&1; then
+            wget --quiet --output-document="$WRAPPER_JAR" "$wrapperDownloadUrl" || die "Could not download $wrapperDownloadUrl"
+        else
+            die "gradle-wrapper.jar is missing and neither curl nor wget is available to download it from $wrapperDownloadUrl"
+        fi
+    fi
+fi
 
 # Determine the Java command to use to start the JVM.
 if [ -n "$JAVA_HOME" ] ; then
