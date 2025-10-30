@@ -1,30 +1,16 @@
 package com.zazeks.app;
 
-import com.zazeks.api.AuthService;
-import com.zazeks.api.GameService;
-import com.zazeks.api.UserService;
-import com.zazeks.database.InMemoryDatabase;
-import com.zazeks.security.PasswordService;
-import com.zazeks.security.TokenService;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * Минимальный Java-эквивалент Python-приложения {@code backend/src/main.py}.
- * Вместо запуска FastAPI настраивает in-memory сервисы и демонстрирует
- * базовое использование.
+ * Полноценная точка входа Spring Boot-приложения, заменяющая минимальный
+ * HTTP-сервер и предоставляющая структурированную маршрутизацию и поддержку
+ * WebSocket, эквивалентную Python-приложению {@code backend/src/main.py}.
  */
-public final class Application {
-    private Application() {}
-
+@SpringBootApplication(scanBasePackages = "com.zazeks")
+public class Application {
     public static void main(String[] args) {
-        InMemoryDatabase database = new InMemoryDatabase();
-        PasswordService passwordService = new PasswordService();
-        TokenService tokenService = new TokenService();
-
-        AuthService authService = new AuthService(database, passwordService, tokenService);
-        UserService userService = new UserService(database);
-        GameService gameService = new GameService(database);
-
-        System.out.println("Java backend analogue initialized. You can wire these services into a web framework if needed.");
-        System.out.printf("Services: %s, %s, %s%n", authService.getClass().getSimpleName(), userService.getClass().getSimpleName(), gameService.getClass().getSimpleName());
+        SpringApplication.run(Application.class, args);
     }
 }

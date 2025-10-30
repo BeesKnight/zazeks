@@ -14,6 +14,7 @@ public class User {
     private int gamesPlayed;
     private int onlineWins;
     private int onlineGames;
+    private boolean admin;
 
     public User(String username, String passwordHash, String photo) {
         this.username = Objects.requireNonNull(username);
@@ -83,5 +84,13 @@ public class User {
 
     public void incrementOnlineGames() {
         this.onlineGames += 1;
+    }
+
+    public boolean isAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(boolean admin) {
+        this.admin = admin;
     }
 }

@@ -1,5 +1,6 @@
 package com.zazeks.database;
 
+import com.zazeks.database.models.Admin;
 import com.zazeks.database.models.Game;
 import com.zazeks.database.models.MultiplayerGame;
 import com.zazeks.database.models.User;
@@ -24,10 +25,12 @@ public class InMemoryDatabase {
     private final Map<Integer, User> users = new ConcurrentHashMap<>();
     private final Map<Integer, Game> games = new ConcurrentHashMap<>();
     private final Map<Integer, MultiplayerGame> multiplayerGames = new ConcurrentHashMap<>();
+    private final Map<Integer, Admin> admins = new ConcurrentHashMap<>();
 
     private final AtomicInteger userIdSequence = new AtomicInteger(0);
     private final AtomicInteger gameIdSequence = new AtomicInteger(0);
     private final AtomicInteger multiplayerIdSequence = new AtomicInteger(0);
+    private final AtomicInteger adminIdSequence = new AtomicInteger(0);
 
     public User saveUser(User user) {
         if (user.getId() == null) {
@@ -35,6 +38,13 @@ public class InMemoryDatabase {
         }
         users.put(user.getId(), user);
         return user;
+    }
+
+    public void deleteUser(int userId) {
+        users.remove(userId);
+        games.values().removeIf(game -> game.getUserId() == userId);
+        multiplayerGames.values().removeIf(game -> game.getPlayer1Id() == userId || game.getPlayer2Id() == userId);
+        admins.values().removeIf(admin -> admin.getUserId() == userId);
     }
 
     public Optional<User> findUserById(int id) {
@@ -63,6 +73,10 @@ public class InMemoryDatabase {
         return Optional.ofNullable(games.get(id));
     }
 
+    public void deleteGame(int gameId) {
+        games.remove(gameId);
+    }
+
     public List<Game> findGamesByUser(int userId) {
         return games.values().stream()
                 .filter(game -> game.getUserId() == userId)
@@ -89,12 +103,49 @@ public class InMemoryDatabase {
         return game;
     }
 
+    public List<MultiplayerGame> findMultiplayerGamesByUser(int userId) {
+        return multiplayerGames.values().stream()
+                .filter(game -> game.getPlayer1Id() == userId || game.getPlayer2Id() == userId)
+                .sorted(Comparator.comparing(MultiplayerGame::getTimestamp))
+                .collect(Collectors.toList());
+    }
+
+    public Optional<MultiplayerGame> findMultiplayerGameById(int id) {
+        return Optional.ofNullable(multiplayerGames.get(id));
+    }
+
+    public Admin saveAdmin(Admin admin) {
+        if (admin.getId() == null) {
+            admin.setId(adminIdSequence.incrementAndGet());
+        }
+        admins.put(admin.getUserId(), admin);
+        findUserById(admin.getUserId()).ifPresent(user -> {
+            user.setAdmin(true);
+            users.put(user.getId(), user);
+        });
+        return admin;
+    }
+
+    public Optional<Admin> findAdminByUserId(int userId) {
+        return Optional.ofNullable(admins.get(userId));
+    }
+
+    public void deleteAdminByUserId(int userId) {
+        admins.remove(userId);
+        findUserById(userId).ifPresent(user -> {
+            user.setAdmin(false);
+            users.put(user.getId(), user);
+        });
+    }
+
     public void reset() {
         users.clear();
         games.clear();
         multiplayerGames.clear();
+        admins.clear();
         userIdSequence.set(0);
         gameIdSequence.set(0);
         multiplayerIdSequence.set(0);
+        adminIdSequence.set(0);
     }
 }
