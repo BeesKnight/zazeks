@@ -38,21 +38,21 @@ public class GameController {
     }
 
     @GetMapping("/{gameId}")
-    public ResponseEntity<Game> getGame(@PathVariable int gameId,
+    public ResponseEntity<Game> getGame(@PathVariable("gameId") int gameId,
                                          @RequestHeader("Authorization") String authorization) {
         int userId = authenticationService.requireUser(authorization).getId();
         return ResponseEntity.ok(gameService.getGameById(gameId, userId));
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Game>> getGamesForUser(@PathVariable int userId,
+    public ResponseEntity<List<Game>> getGamesForUser(@PathVariable("userId") int userId,
                                                        @RequestHeader("Authorization") String authorization) {
         authenticationService.requireUser(authorization, userId);
         return ResponseEntity.ok(gameService.getGamesForUser(userId, userId));
     }
 
     @PutMapping("/add-win/{userId}")
-    public ResponseEntity<Integer> addWin(@PathVariable int userId,
+    public ResponseEntity<Integer> addWin(@PathVariable("userId") int userId,
                                            @RequestHeader("Authorization") String authorization) {
         authenticationService.requireUser(authorization, userId);
         int wins = gameService.addWin(userId, userId);

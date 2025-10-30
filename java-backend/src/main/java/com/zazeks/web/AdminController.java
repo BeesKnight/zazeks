@@ -1,10 +1,13 @@
 package com.zazeks.web;
 
-import com.zazeks.api.admin.AdminService;
+import com.zazeks.api.AdminService;
+import com.zazeks.database.models.DetectionMetadata;
+import com.zazeks.database.models.MultiplayerSession;
 import com.zazeks.security.AuthenticationService;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,8 +15,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 @Validated
@@ -29,7 +34,7 @@ public class AdminController {
     }
 
     @DeleteMapping("/users/{userId}")
-    public ResponseEntity<Map<String, String>> deleteUser(@PathVariable int userId,
+    public ResponseEntity<Map<String, String>> deleteUser(@PathVariable("userId") int userId,
                                                           @RequestHeader("Authorization") String authorization) {
         authenticationService.requireAdmin(authorization);
         adminService.deleteUser(userId);
@@ -45,7 +50,7 @@ public class AdminController {
     }
 
     @DeleteMapping("/admins/{userId}")
-    public ResponseEntity<Map<String, String>> deleteAdmin(@PathVariable int userId,
+    public ResponseEntity<Map<String, String>> deleteAdmin(@PathVariable("userId") int userId,
                                                            @RequestHeader("Authorization") String authorization) {
         authenticationService.requireAdmin(authorization);
         adminService.removeAdmin(userId);
@@ -53,15 +58,28 @@ public class AdminController {
     }
 
     @DeleteMapping("/games/{gameId}")
-    public ResponseEntity<Map<String, String>> deleteGame(@PathVariable int gameId,
+    public ResponseEntity<Map<String, String>> deleteGame(@PathVariable("gameId") int gameId,
                                                           @RequestHeader("Authorization") String authorization) {
         authenticationService.requireAdmin(authorization);
         adminService.deleteGame(gameId);
         return ResponseEntity.ok(Map.of("msg", "Game " + gameId + " deleted successfully"));
     }
 
+    @GetMapping("/sessions")
+    public ResponseEntity<List<MultiplayerSession>> listSessions(@RequestHeader("Authorization") String authorization) {
+        authenticationService.requireAdmin(authorization);
+        return ResponseEntity.ok(adminService.listMultiplayerSessions());
+    }
+
+    @GetMapping("/detections")
+    public ResponseEntity<List<DetectionMetadata>> listDetections(@RequestHeader("Authorization") String authorization,
+                                                                  @RequestParam(value = "userId", required = false) Integer userId) {
+        authenticationService.requireAdmin(authorization);
+        return ResponseEntity.ok(adminService.listDetections(userId));
+    }
+
     @DeleteMapping("/users/{userId}/photo")
-    public ResponseEntity<Map<String, String>> deleteUserPhoto(@PathVariable int userId,
+    public ResponseEntity<Map<String, String>> deleteUserPhoto(@PathVariable("userId") int userId,
                                                                 @RequestHeader("Authorization") String authorization) {
         authenticationService.requireAdmin(authorization);
         adminService.deleteUserPhoto(userId);
@@ -69,7 +87,7 @@ public class AdminController {
     }
 
     @PutMapping("/users/{userId}/username")
-    public ResponseEntity<Map<String, String>> changeUsername(@PathVariable int userId,
+    public ResponseEntity<Map<String, String>> changeUsername(@PathVariable("userId") int userId,
                                                                @RequestHeader("Authorization") String authorization,
                                                                @RequestBody UsernameRequest request) {
         authenticationService.requireAdmin(authorization);

@@ -42,14 +42,14 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<UserProfile> getUserProfile(@PathVariable int userId,
+    public ResponseEntity<UserProfile> getUserProfile(@PathVariable("userId") int userId,
                                                        @RequestHeader("Authorization") String authorization) {
         User user = authenticationService.requireUser(authorization, userId);
         return ResponseEntity.ok(userService.getUserProfile(user.getId(), user.getId()));
     }
 
     @GetMapping("/{userId}/avatar")
-    public ResponseEntity<Map<String, String>> getUserAvatar(@PathVariable int userId,
+    public ResponseEntity<Map<String, String>> getUserAvatar(@PathVariable("userId") int userId,
                                                               @RequestHeader("Authorization") String authorization) {
         authenticationService.requireUser(authorization);
         UserProfile profile = userService.getUserProfile(userId, userId);
@@ -57,7 +57,7 @@ public class UserController {
     }
 
     @PutMapping("/{userId}")
-    public ResponseEntity<UpdateResult> updateProfile(@PathVariable int userId,
+    public ResponseEntity<UpdateResult> updateProfile(@PathVariable("userId") int userId,
                                                        @RequestHeader("Authorization") String authorization,
                                                        @RequestBody UpdateRequest request) {
         authenticationService.requireUser(authorization, userId);

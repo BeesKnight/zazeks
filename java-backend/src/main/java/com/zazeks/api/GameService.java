@@ -3,6 +3,7 @@ package com.zazeks.api;
 import com.zazeks.database.InMemoryDatabase;
 import com.zazeks.database.models.Game;
 import com.zazeks.database.models.User;
+import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.Map;
  * Java-аналог модуля {@code backend/src/api/game.py}.
  * Содержит бизнес-логику сохранения и получения игр.
  */
+@Service
 public class GameService {
     private static final Duration DUPLICATE_THRESHOLD = Duration.ofSeconds(10);
     private static final Map<String, String> RESULT_TRANSLATION = Map.of(

@@ -5,6 +5,7 @@ import com.zazeks.database.InMemoryDatabase;
 import com.zazeks.database.models.User;
 import com.zazeks.security.PasswordService;
 import com.zazeks.security.TokenService;
+import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.Map;
@@ -15,6 +16,7 @@ import java.util.regex.Pattern;
  * Java-аналог модуля {@code backend/src/api/auth.py}.
  * Реализует регистрацию и авторизацию пользователей.
  */
+@Service
 public class AuthService {
     private static final Pattern USERNAME_PASSWORD_REGEX = Pattern.compile("^[a-zA-Z0-9_]{4,15}$");
 
