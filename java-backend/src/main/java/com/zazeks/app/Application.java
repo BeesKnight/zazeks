@@ -16,15 +16,13 @@ import com.zazeks.database.models.Game;
 import com.zazeks.security.PasswordService;
 import com.zazeks.security.TokenService;
 
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.Executors;
 
-/**
- * Минимальный HTTP-сервер, использующий in-memory реализацию хранилища.
- */
 public final class Application {
     private Application() {
     }

@@ -1,56 +1,50 @@
-# Мобильное приложение Zazeks
+# Zazeks Android app
 
-Этот документ описывает процесс подготовки и сборки Android-приложения проекта, включая
-настройку тестовой подписи, проверку встроенных ресурсов и запуск.
+This guide walks through preparing, configuring, and testing the Android client while the backend migration to Spring Boot is underway.
 
-## Предварительные требования
+## Prerequisites
 
 - Android Studio Iguana (или новее) **или** установленный Gradle 8.7+
 - Android SDK 34, платформа-инструменты и эмулятор/устройство с Android 7.0+
 - Java 17 (рекомендуется использовать комплект JDK, поставляемый с Android Studio)
 
-## Структура проекта
+
+## Project structure
 
 ```
 android/
-├── build.gradle          # Модульное описание Gradle
-├── signing/              # Настройки подписи (шаблон и ваши ключи)
-├── src/main/assets/      # Ресурсы, конфигурации и модель
-└── src/main/java/...     # Исходный код приложения
+├── build.gradle          # Module-level Gradle file
+├── signing/              # Debug/release signing configuration (template provided)
+├── src/main/assets/      # Backend configuration and ML assets packaged into the APK
+└── src/main/java/...     # Application sources
 ```
 
-Каталог `src/main/assets` содержит пример конфигурации backend, демонстрационные данные модели
-и служебные файлы камеры. Они автоматически упаковываются в APK для режимов debug и release.
+`src/main/assets` ships configuration files such as `config/backend.json`, demo models, and camera presets. They are included in every build variant.
 
-## Настройка подписи APK
+## APK signing
 
-В каталоге `signing/` лежит файл-шаблон `signing.properties.example`.
-Скопируйте его в `signing/signing.properties` и заполните своими данными.
-Если у вас ещё нет keystore, создайте его (например, командой ниже) и пропишите путь и пароли:
+1. Copy `signing/signing.properties.example` to `signing/signing.properties`.
+2. Generate a keystore if you do not already have one:
+   ```bash
+   keytool -genkeypair -v \
+     -storetype PKCS12 \
+     -keystore signing/my-release-key.jks \
+     -alias my-key-alias \
+     -keyalg RSA -keysize 2048 -validity 3650
+   ```
+3. Update `signing/signing.properties` with the keystore path and passwords:
+   ```
+   storeFile=signing/my-release-key.jks
+   storePassword=<keystore password>
+   keyAlias=<key alias>
+   keyPassword=<key password>
+   ```
 
-```bash
-keytool -genkeypair -v \
-  -storetype PKCS12 \
-  -keystore signing/my-release-key.jks \
-  -alias my-key-alias \
-  -keyalg RSA -keysize 2048 -validity 3650
-```
+When the file exists, Gradle signs both debug and release builds automatically.
 
-После генерации укажите значения в `signing/signing.properties`:
+## Backend configuration
 
-```
-storeFile=signing/my-release-key.jks
-storePassword=<пароль к хранилищу>
-keyAlias=<алиас ключа>
-keyPassword=<пароль ключа>
-```
-
-Gradle применит подпись и для debug, и для release сборки, если файл `signing/signing.properties` существует.
-
-## Обновление конфигурации backend
-
-Приложение читает параметры окружения из `src/main/assets/config/backend.json`. Перед сборкой
-обновите адреса под своё окружение. Пример содержимого:
+The app reads connection details from `src/main/assets/config/backend.json`. Point it at the Spring Boot service (default port 8080):
 
 ```json
 {
@@ -60,42 +54,46 @@ Gradle применит подпись и для debug, и для release сбо
 }
 ```
 
-Для удобства рядом лежит шаблон `backend.example.json`.
+Use `10.0.2.2` when running on an emulator; physical devices should reference your workstation IP. The detection endpoint stays the same while the Java backend regains ML support. If you experiment with on-device inference, replace `backendBaseUrl` with `"device"` and update the client code to bypass HTTP calls.
 
-## Сборка из командной строки
+## Building from the command line
 
 ```bash
 cd android
-./gradlew assembleDebug   # сборка debug и генерация app-debug.apk
-./gradlew assembleRelease # сборка release и генерация app-release.apk
+./gradlew assembleDebug   # Produces app-debug.apk
+./gradlew assembleRelease # Produces app-release.apk
 ```
 
-> Если Gradle wrapper ещё не инициализирован в вашей среде, запустите `gradle wrapper` один раз или
-> воспользуйтесь Android Studio (она создаст wrapper автоматически).
+> If you are setting up the project on a new machine, run `./gradlew wrapper` once to download the Gradle wrapper JAR.
 
-Готовые APK можно найти в `android/build/outputs/apk/<buildType>/`.
+Outputs appear under `android/build/outputs/apk/<buildType>/`.
 
-## Установка APK на устройство
+## Installing a build
 
-1. Включите режим разработчика и «Отладку по USB» на устройстве.
-2. Подключите устройство к компьютеру и убедитесь, что оно определяется командой `adb devices`.
-3. Установите нужную сборку:
+1. Enable Developer Mode and USB debugging on your device (or boot an emulator).
+2. Verify that the device is visible: `adb devices`.
+3. Install the APK:
    ```bash
    adb install -r build/outputs/apk/debug/android-debug.apk
    ```
-4. Запустите приложение «Zazeks» на устройстве/эмуляторе.
+4. Launch the **Zazeks** app.
 
-## Проверка встроенных файлов
+## Packaging checks
 
-- В Android Studio откройте вкладку *Build* → *Analyze APK* и выберите собранный APK.
-- Убедитесь, что внутри присутствуют каталоги:
-  - `assets/config/backend.json`
-  - `assets/model/gesture_labels.json`
-  - `assets/resources/camera_presets.json`
-- Для автоматизации можно использовать команду `./gradlew verifyReleaseResources`, которая
-  проверит наличие ресурсов на этапе сборки.
+- Android Studio: *Build* → *Analyze APK* to inspect embedded assets (`assets/config/backend.json`, ML labels, camera presets).
+- Command line: `./gradlew verifyReleaseResources` fails the build if required resources are missing.
 
-## Запуск демонстрации
+## Demo flow
+
+1. Start the Spring Boot backend (`cd ../java-backend && ./gradlew bootRun`).
+2. Launch the app and register a new player.
+3. Play a single-player round to exercise the `/games` endpoint.
+4. Join matchmaking to verify WebSocket connectivity and `/multiplayer/result`.
+5. Observe backend logs for saved games; restart the backend for a clean slate.
+
+When the ML pipeline is reattached, the `/model/detect` endpoint will return real gestures; until then it provides a deterministic placeholder response.
+
+## VS Code tips
 
 1. Убедитесь, что Java backend запущен и доступен по адресу, указанному в `backend.json` (по умолчанию `http://10.0.2.2:8080`).
 2. Запустите приложение и выберите «Новая игра» в главном меню.
@@ -104,4 +102,3 @@ cd android
 5. Наблюдайте за результатами раунда и статистикой побед в приложении.
 6. Для завершения сеанса вернитесь в главное меню и откройте «Результаты».
 
-Дополнительный сценарий презентации размещён в `docs/android/demo_script.md`.

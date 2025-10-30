@@ -58,6 +58,11 @@ public class UserService {
             user.setPhoto(photo);
         }
         if (username != null) {
+            database.findUserByUsername(username).ifPresent(existing -> {
+                if (!existing.getId().equals(user.getId())) {
+                    throw new IllegalStateException("Username already taken");
+                }
+            });
             user.setUsername(username);
         }
         database.saveUser(user);

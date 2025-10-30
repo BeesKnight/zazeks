@@ -3,4 +3,3 @@
   "detectionEndpoint": "/model/detect",
   "timeoutSeconds": 15
 }
-

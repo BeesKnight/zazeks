@@ -3,8 +3,10 @@ package com.zazeks.security;
 import com.zazeks.config.Settings;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
+
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
@@ -21,6 +23,7 @@ import java.util.Map;
  */
 public class TokenService {
     private final Settings settings = Settings.getInstance();
+    private volatile JwtParser parser;
 
     private Key signingKey() {
         try {
@@ -73,5 +76,6 @@ public class TokenService {
         } catch (NumberFormatException ex) {
             throw new IllegalArgumentException("Invalid subject claim", ex);
         }
+
     }
 }
