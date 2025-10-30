@@ -1,163 +1,165 @@
-# Игра "Камень - Ножницы - Бумага"
+# Zazeks: Rock–Paper–Scissors with Gesture Recognition
 
-Добро пожаловать в репозиторий проекта "Камень - Ножницы - Бумага"! Данный проект представляет собой игру, в которой пользователь соревнуется с компьютером, используя реальные жесты, определяемые с помощью нейронной сети.
-
----
-
-## Описание проекта
-
-**Кейс:** Разработка игры "Камень - Ножницы - Бумага", в которой:
-- Пользователь играет против компьютера.
-- Программа получает изображение с камеры, распознаёт один из трех жестов:
-  - **Камень**
-  - **Ножницы**
-  - **Бумага**
-- Компьютер генерирует случайный выбор из этих же вариантов.
-- На основе общепринятых правил:
-  - Ножницы побеждают бумагу.
-  - Бумага побеждает камень.
-  - Камень побеждает ножницы.
-- Результат сравнения выводится на экран с сообщением **"Победа"** или **"Проигрыш"**.
-- Программа ведет учёт количества побед и поражений игрока.
+This repository contains the in-progress migration of the Zazeks gesture-driven Rock–Paper–Scissors game from a Python/FastAPI backend to a Spring Boot backend paired with the existing Android client. The goal is to provide the same real-time gameplay, matchmaking, and player management features that the FastAPI stack exposed while simplifying local development.
 
 ---
 
-## Функциональные возможности
+## Project layout
 
-- **Реальное распознавание жестов:** 
-  - Использование камеры для захвата изображения в реальном времени.
-  - Детекция жестов (камень, ножницы, бумага) с помощью дообученной модели YOLOv11.
-- **Дополнительные возможности:**
-  - **Мультиплеер:** Возможность игры между двумя игроками.
-  - **Профиль игрока:** Хранение статистики, количества побед и поражений.
-- **Гибкий интерфейс:**
-  - Игра реализована в виде многофункциональной веб-страницы.
-
----
-
-## Используемые технологии
-
-- **Нейронные сети и компьютерное зрение:**
-  - Модель YOLOv11, дообученная на собственном датасете из 12,000 изображений.
-- **Основные фреймворки:**
-  - YOLO, FastApi
-  - Spring Boot 3 (Java backend, WebSocket)
-- **Интерфейс:**
-  - Html, css, JavaScript.
+| Path | Description |
+|------|-------------|
+| `java-backend/` | Spring Boot 3 service that currently backs the game APIs and multiplayer WebSocket. |
+| `android/` | Android client written in Java with HTTP/WebSocket integrations and configurable backend endpoints. |
+| `backend/` | Legacy FastAPI service kept only as a reference for feature parity. |
+| `docs/` | High-level architecture notes, testing strategy, and demo scripts. |
+| `model/`, `defay_1x9/`, `frontend/` | Assets from the original prototype (not yet integrated with the Java backend). |
 
 ---
 
-## Установка и запуск
+## Current status and remaining work
 
-1. **Клонируйте репозиторий:**
+### Spring Boot backend
 
-   ```bash
-   git clone https://github.com/BeesKnigh/zazeks.git
-   cd zazeks
+**Implemented**
+- JWT-based authentication with registration/login endpoints.
+- Player profile, avatar, and leaderboard operations backed by an in-memory data store.
+- REST CRUD for single-player game history plus duplicate-submission protection.
+- WebSocket matchmaking (`/ws/multiplayer`) with battle lifecycle management and result persistence.
+- Administrative actions for moderating users and game records.
 
-2. **Создайте виртуальное окружение и войдите в него**
-    ``` bash
-    python -m venv venv
-    venv\Scripts\activate
+**To be reimplemented before feature parity**
+- Replace the in-memory database with the PostgreSQL schema that existed in the FastAPI service.
+- Persist avatars and other binary assets outside of process memory.
+- Restore ML-powered inference for `/model/detect` (the current implementation returns a deterministic hash-based stub).
+- Reintroduce analytics/log streaming and structured audit trails from the Python stack.
 
-2. **Установите необходимые зависимости:**
-    ```bash
-    pip install -r requirements.txt
+### Android client
 
-3. **Запуск backend части:**
-    ```bash
-    uvicorn --app-dir backend src.main:app
+**Implemented**
+- Connects to configurable HTTP/WebSocket endpoints for authentication, play, and leaderboards.
+- Streams camera frames to `/model/detect` and renders bounding boxes/gesture results when provided.
+- Includes debug and release signing configuration templates.
 
-4. **Запуск backend части:**
- - Все можно заходить на сайт и играть оффлайн:
-    ```bash
-    http://127.0.0.1:8000
+**To be reimplemented**
+- Switch the HTTP bridge to the restored Java inference service or enable on-device TensorFlow Lite once the backend endpoint is updated.
+- Re-enable offline caching and background sync that depended on the FastAPI endpoints.
+- Update UI copy/screenshots after parity testing with the new backend.
 
-### Java backend (полная функциональность FastAPI версии)
-
-В каталоге `java-backend` находится эквивалентный сервер на Spring Boot 3, который реализует все маршруты, WebSocket-поток и административные операции, доступные ранее в Python/FastAPI.
-
-- **Запуск:**
-  ```bash
-  cd java-backend
-  ./gradlew bootRun
-  ```
-- **Возможности:** REST-эндпоинты авторизации, профилей, истории игр, админ-панели, сохранения результатов мультиплеера и WebSocket `/ws/multiplayer` для матчмейкинга и боёв.
-- **Тесты:**
-  ```bash
-  ./gradlew test
-  ```
-  Набор интеграционных тестов покрывает защиту от повторной отправки игр, проверки ролей и полный жизненный цикл WebSocket-сессий.
+Legacy FastAPI code remains available for comparison during the migration but should not be deployed for new development.
 
 ---
 
-## Использование
-- Запуск игры: После старта приложения, направьте камеру на руку, демонстрирующую один из жестов (камень, ножницы или бумага).
-- Соревнование: Приложение автоматически сравнит выбранный жест с выбором компьютера и определит победителя.
-- Статистика: В профиле и лидерборде можно увидеть всю статистику которая у вас записывается.
+## Backend API surface (Spring Boot)
+
+All endpoints expect JSON unless stated otherwise. Authenticated routes require an `Authorization: Bearer <token>` header obtained from `POST /auth/login`.
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `POST` | `/auth/register` | Create a player with username, password, optional Base64 avatar. |
+| `POST` | `/auth/login` | Obtain a JWT for subsequent requests. |
+| `GET` | `/users/leaderboard/offline` | Offline leaderboard sorted by total wins. |
+| `GET` | `/users/leaderboard/online` | Online leaderboard sorted by multiplayer wins. |
+| `GET` | `/users/{userId}` | Fetch the authenticated player’s profile and statistics. |
+| `GET` | `/users/{userId}/avatar` | Retrieve the player avatar as a Base64 string. |
+| `PUT` | `/users/{userId}` | Update username and/or avatar. |
+| `POST` | `/games` | Save a single-player match result. |
+| `GET` | `/games/{gameId}` | Retrieve a specific single-player match. |
+| `GET` | `/games/user/{userId}` | List matches for the authenticated player. |
+| `PUT` | `/games/add-win/{userId}` | Increment the win counter (utility action used by the client). |
+| `POST` | `/multiplayer/result` | Persist a multiplayer match result. |
+| `POST` | `/model/detect` | Upload a JPEG frame for gesture detection (stubbed until ML integration returns). |
+| `DELETE` | `/admin/users/{userId}` | Remove a non-admin user. |
+| `POST` | `/admin/admins` | Grant admin role to a user. |
+| `DELETE` | `/admin/admins/{userId}` | Revoke admin role. |
+| `DELETE` | `/admin/games/{gameId}` | Delete any recorded game. |
+| `DELETE` | `/admin/users/{userId}/photo` | Remove avatar media. |
+| `PUT` | `/admin/users/{userId}/username` | Force-update a username. |
+| `WS` | `/ws/multiplayer` | Matchmaking and game orchestration for multiplayer battles. |
+
+Swagger/OpenAPI generation has not been wired up yet; use the integration tests in `java-backend/src/test/java` as executable documentation.
 
 ---
 
-## Мобильное приложение (Android)
+## Running the backend
 
-Подробная инструкция по сборке и запуску мобильной версии расположена в `android/README.md`. В ней
-описаны:
+```
+cd java-backend
+# First-time setup: ensure the Gradle wrapper JAR is downloaded.
+./gradlew wrapper
+# Start the Spring Boot service (equivalent to the legacy FastAPI app).
+./gradlew bootRun
+```
 
-- настройка Gradle и подписи debug/release сборок с использованием собственного keystore (шаблон в `android/signing/signing.properties.example`);
-- набор файлов, упакованных в APK (конфигурации backend, демо-модель и вспомогательные ресурсы);
-- команды для сборки, установки и проверки APK;
-- демонстрационный сценарий (см. `docs/android/demo_script.md`).
+The service listens on <http://localhost:8080>. Configuration such as JWT lifetimes reads from environment variables via `com.zazeks.config.Settings`.
+
+During development you can reset the in-memory store between manual tests by restarting the process.
 
 ---
 
-## 🐟 Команда разработчиков
+## Android client quick start
 
-<table>
-  <tr>
-    <td align="center" style="border: 1px solid #555;">
-      <img src="defay_1x9/pics_readme/Sasha.jpg" width="100" height="100" style="border-radius: 50%" alt="avatar"><br />
-      <b>Александр Штеренфельд</b><br />
-      <sub><i>Тимлид, ML Developer ,Full-stack разработчик</i></sub>
-      <hr style="border: 1px solid #555; margin: 10px 0;">
-      <div align="left">
-      <b>Вклад в проект:</b><br />
-      • Backend/Frontend разработка<br />
-      • Работа с базами данных<br />
-      • Модель по распознованию жестов
-      <hr style="border: 1px solid #555; margin: 10px 0;">
-      <b>Контакты:</b><br />
-      <a href="https://github.com/BeesKnigh">GitHub</a> • <a href="https://t.me/BeesKnights">Telegram</a>
-      </div>
-    </td>
-    <td align="center" style="border: 1px solid #555;">
-      <img src="defay_1x9/pics_readme/Denis.jpg" width="100" height="100" style="border-radius: 50%" alt="avatar"><br />
-      <b>Денис Байрамов</b><br />
-      <sub><i>Backend разработчик</i></sub>
-      <hr style="border: 1px solid #555; margin: 10px 0;">
-      <div align="left">
-      <b>Вклад в проект:</b><br />
-      • Backend разработка<br />
-      • Работа с базами данных<br />
-      <hr style="border: 1px solid #555; margin: 10px 0;">
-      <b>Контакты:</b><br />
-      <a href="https://github.com/Denbay0">GitHub</a> • <a href="https://t.me/Denbay0">Telegram</a>
-      </div>
-    </td>
-    <td align="center" style="border: 1px solid #555;">
-      <img src="defay_1x9/pics_readme/Max.jpg" width="100" height="100" style="border-radius: 50%" alt="avatar"><br />
-      <b>Максим Землянский</b><br />
-      <sub><i>Pintester</i></sub>
-      <hr style="border: 1px solid #555; margin: 10px 0;">
-      <div align="left">
-      <b>Вклад в проект:</b><br />
-      • Безпосаность<br />
-      • Придумывал проблемы<br />
-      <hr style="border: 1px solid #555; margin: 10px 0;">
-      <b>Контакты:</b><br />
-      <a href="https://github.com/kusotsu">GitHub</a> • <a href="https://t.me/kusotsutar">Telegram</a>
-      </div>
-    </td>
-  </tr>
-</table>
+```
+cd android
+# Assemble a debug build
+./gradlew assembleDebug
+# Run JVM unit tests for the Android module
+./gradlew testDebugUnitTest
+```
 
-![alt text](defay_1x9/pics_readme/image.png)
+Update `src/main/assets/config/backend.json` to point the app to your backend instance (see below). Install the resulting APK with `adb install -r build/outputs/apk/debug/android-debug.apk` or by using the VS Code/Android Studio device manager.
+
+The client currently expects the `/model/detect` endpoint to be reachable over HTTP. If you test against the Java backend before the ML rewrite lands, the placeholder inference will respond with pseudo-random gestures derived from the uploaded bytes.
+
+---
+
+## VS Code workflow
+
+1. **Recommended extensions**
+   - *Extension Pack for Java* (includes Language Support for Java, Debugger for Java, and the Gradle Tasks explorer).
+   - *Android Extension Pack* or at least *Android Emulator* + *ADB Interface* so VS Code can surface devices and logcat.
+   - *Kotlin* support is optional but useful for reading Gradle Kotlin DSL files.
+
+2. **Integrated terminal commands**
+   - Backend: `cd java-backend && ./gradlew bootRun` (VS Code exposes this as the `run` task in the Gradle explorer, so you can trigger it with `./gradlew run` from the command palette if you prefer the alias).
+   - Backend tests: `cd java-backend && ./gradlew test`.
+   - Android build: `cd android && ./gradlew assembleDebug`.
+
+   You can add these commands to `.vscode/tasks.json` to launch them with <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>. When defining tasks, set the `cwd` to either `java-backend` or `android` to avoid path issues.
+
+3. **Debugging & devices**
+   - Use the Java extension’s *Run and Debug* view to attach to the Spring Boot app. Configure a `Java: Launch` profile pointing at `com.zazeks.app.Application`—VS Code will reuse the Gradle build and allow breakpoints.
+   - Install the *Android* extension’s ADB integration to list physical devices or emulators in the *Devices* panel. Ensure an emulator is running (`Android SDK` tools) or plug in a device with USB debugging enabled.
+   - Create an `android` launch configuration with `"request": "launch"` and `"appSrcRoot": "${workspaceFolder}/android"` so you can trigger `assembleDebug` + deploy directly from VS Code.
+   - For emulator debugging, start an Android Virtual Device (`avdmanager` or Android Studio), then use the *Run on Android* command palette entry supplied by the extension pack.
+
+---
+
+## End-to-end testing from VS Code
+
+The goal is to exercise the full stack—backend REST/WebSocket plus the Android client—in one workspace.
+
+1. **Backend verification**
+   - `cd java-backend && ./gradlew test` runs the JUnit integration suite (`src/test/java/com/zazeks/web/*IntegrationTest.java`), covering REST endpoints, JWT flows, and WebSocket matchmaking. Failures usually highlight parity gaps with the legacy FastAPI behaviour.
+
+2. **Android unit tests**
+   - `cd android && ./gradlew testDebugUnitTest` executes JVM tests for view models, repositories, and HTTP bridges without needing an emulator.
+
+3. **Android UI tests**
+   - `cd android && ./gradlew connectedDebugAndroidTest` requires an emulator or device. Launch the emulator via the VS Code device panel, then trigger the task from the Gradle explorer or a custom task entry.
+
+4. **Smoke-testing the full flow**
+   - Start the backend (`./gradlew bootRun`).
+   - Deploy the debug APK to an emulator using `adb install` or VS Code’s *Run on Android* command.
+   - From the emulator, register a user, play a single-player round, then open matchmaking so the WebSocket traffic is exercised. Watch backend logs in the terminal to confirm game persistence.
+   - For inference checks, upload static images via the in-app gallery until the real model is restored.
+
+Because the backend stores everything in memory, restarting `bootRun` gives you a clean slate for repeated test loops.
+
+---
+
+## Contributing
+
+1. Fork and clone the repository.
+2. Create a feature branch and ensure both backend (`./gradlew test`) and Android (`./gradlew testDebugUnitTest`) checks pass before opening a PR.
+3. Update this README or the Android documentation when you add or change API endpoints so the migration guide stays current.
+
