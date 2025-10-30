@@ -37,7 +37,8 @@ public class MultiplayerResultController {
                 request.player2Id(),
                 request.player1Gesture(),
                 request.player2Gesture(),
-                request.result()
+                request.result(),
+                request.sessionId()
         );
         return ResponseEntity.ok(Map.of(
                 "msg", "Multiplayer game result saved successfully",
@@ -49,5 +50,6 @@ public class MultiplayerResultController {
                                            int player2Id,
                                            @NotBlank String player1Gesture,
                                            @NotBlank String player2Gesture,
-                                           @NotBlank String result) {}
+                                           @NotBlank String result,
+                                           String sessionId) {}
 }

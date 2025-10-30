@@ -1,9 +1,12 @@
 package com.zazeks.database;
 
 import com.zazeks.database.models.Admin;
+import com.zazeks.database.models.DetectionMetadata;
 import com.zazeks.database.models.Game;
 import com.zazeks.database.models.MultiplayerGame;
+import com.zazeks.database.models.MultiplayerSession;
 import com.zazeks.database.models.User;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -14,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
@@ -21,16 +25,20 @@ import java.util.stream.Collectors;
  * {@code backend/src/database/session.py}. Вместо реальной БД используется набор
  * потокобезопасных коллекций с авто-инкрементными идентификаторами.
  */
+@Component
 public class InMemoryDatabase {
     private final Map<Integer, User> users = new ConcurrentHashMap<>();
     private final Map<Integer, Game> games = new ConcurrentHashMap<>();
     private final Map<Integer, MultiplayerGame> multiplayerGames = new ConcurrentHashMap<>();
     private final Map<Integer, Admin> admins = new ConcurrentHashMap<>();
+    private final Map<String, MultiplayerSession> multiplayerSessions = new ConcurrentHashMap<>();
+    private final Map<Long, DetectionMetadata> detectionMetadata = new ConcurrentHashMap<>();
 
     private final AtomicInteger userIdSequence = new AtomicInteger(0);
     private final AtomicInteger gameIdSequence = new AtomicInteger(0);
     private final AtomicInteger multiplayerIdSequence = new AtomicInteger(0);
     private final AtomicInteger adminIdSequence = new AtomicInteger(0);
+    private final AtomicLong detectionIdSequence = new AtomicLong(0);
 
     public User saveUser(User user) {
         if (user.getId() == null) {
@@ -114,6 +122,50 @@ public class InMemoryDatabase {
         return Optional.ofNullable(multiplayerGames.get(id));
     }
 
+    public MultiplayerSession saveMultiplayerSession(MultiplayerSession session) {
+        session.touch();
+        multiplayerSessions.put(session.getId(), session);
+        return session;
+    }
+
+    public Optional<MultiplayerSession> findMultiplayerSessionById(String sessionId) {
+        return Optional.ofNullable(multiplayerSessions.get(sessionId));
+    }
+
+    public List<MultiplayerSession> findMultiplayerSessionsByUser(int userId) {
+        return multiplayerSessions.values().stream()
+                .filter(session -> session.getPlayer1Id() == userId || session.getPlayer2Id() == userId)
+                .sorted(Comparator.comparing(MultiplayerSession::getUpdatedAt).reversed())
+                .collect(Collectors.toList());
+    }
+
+    public List<MultiplayerSession> findAllMultiplayerSessions() {
+        return new ArrayList<>(multiplayerSessions.values());
+    }
+
+    public void deleteMultiplayerSession(String sessionId) {
+        multiplayerSessions.remove(sessionId);
+    }
+
+    public DetectionMetadata saveDetectionMetadata(DetectionMetadata metadata) {
+        if (metadata.getId() == null) {
+            metadata.setId(detectionIdSequence.incrementAndGet());
+        }
+        detectionMetadata.put(metadata.getId(), metadata);
+        return metadata;
+    }
+
+    public List<DetectionMetadata> findDetectionMetadataByUser(Integer userId) {
+        return detectionMetadata.values().stream()
+                .filter(meta -> userId == null || userId.equals(meta.getUserId()))
+                .sorted(Comparator.comparing(DetectionMetadata::getDetectedAt).reversed())
+                .collect(Collectors.toList());
+    }
+
+    public List<DetectionMetadata> findAllDetectionMetadata() {
+        return new ArrayList<>(detectionMetadata.values());
+    }
+
     public Admin saveAdmin(Admin admin) {
         if (admin.getId() == null) {
             admin.setId(adminIdSequence.incrementAndGet());
@@ -143,9 +195,12 @@ public class InMemoryDatabase {
         games.clear();
         multiplayerGames.clear();
         admins.clear();
+        multiplayerSessions.clear();
+        detectionMetadata.clear();
         userIdSequence.set(0);
         gameIdSequence.set(0);
         multiplayerIdSequence.set(0);
         adminIdSequence.set(0);
+        detectionIdSequence.set(0);
     }
 }

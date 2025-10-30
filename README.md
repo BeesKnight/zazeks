@@ -8,7 +8,7 @@
 
 - **Кейс:** мультимедийная игра «Камень — Ножницы — Бумага» с распознаванием жестов и поддержкой мультиплеера.
 - **Стек:**
-  - **Backend:** Java (Gradle, чистый HTTP API на базе in-memory сервиса из модуля `java-backend`).
+  - **Backend:** Java (Spring Boot + WebSocket стек поверх in-memory хранилища из модуля `java-backend`).
   - **Client:** Android-приложение (модуль `android`).
   - **ML:** предобученная модель YOLOv11, используемая на клиентской стороне.
 
@@ -22,11 +22,11 @@
 - **Мобильный клиент** – интерфейс Android, камера, обработка жестов, синхронизация через HTTP API.
 
 **Implemented**
-- JWT-based authentication with registration/login endpoints.
-- Player profile, avatar, and leaderboard operations backed by an in-memory data store.
-- REST CRUD for single-player game history plus duplicate-submission protection.
-- WebSocket matchmaking (`/ws/multiplayer`) with battle lifecycle management and result persistence.
-- Administrative actions for moderating users and game records.
+- Spring Boot REST API with JWT-protected controllers for `/auth`, `/users`, `/games`, `/multiplayer`, and `/admin`.
+- Player profile, avatar, leaderboard, and detection metadata operations backed by an enhanced in-memory data store.
+- REST CRUD for single-player and multiplayer sessions (with duplicate-submission protection and persistent online win counters).
+- WebSocket matchmaking (`/ws/multiplayer`) with queue handling, battle lifecycle automation, and session history tracking.
+- Administrative role management endpoints plus inspection of multiplayer sessions and gesture detections.
 
 **To be reimplemented before feature parity**
 - Replace the in-memory database with the PostgreSQL schema that existed in the FastAPI service.
@@ -56,8 +56,9 @@
    ./gradlew test
    ```
 4. **Доступные сервисы**
-   - REST API стартует на `http://localhost:8080`.
-   - Реализованы сервисы авторизации, управления пользователями, записи результатов игр и матчей.
+   - REST API стартует на `http://localhost:8080` (основные маршруты: `/auth`, `/users`, `/games`, `/multiplayer`, `/admin`, `/model/detect`).
+   - WebSocket эндпоинт для матчмейкинга: `ws://localhost:8080/ws/multiplayer`.
+   - Админ-панель API предоставляет управление ролями, играми и журналами (`/admin/*`), защита по JWT + роли.
 
 > **Примечание:** backend использует in-memory хранилище (`InMemoryDatabase`). Для постоянного хранения данных подключите собственную базу и реализуйте DAO-интерфейсы по аналогии с текущими сервисами.
 

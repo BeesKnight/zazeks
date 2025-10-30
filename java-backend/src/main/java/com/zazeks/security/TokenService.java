@@ -3,12 +3,12 @@ package com.zazeks.security;
 import com.zazeks.config.Settings;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
-
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
@@ -21,6 +21,7 @@ import java.util.Map;
  * Реализация генерации JWT-токена, соответствующая функции
  * {@code create_access_token} из Python-модуля {@code backend/src/security.py}.
  */
+@Component
 public class TokenService {
     private final Settings settings = Settings.getInstance();
     private volatile JwtParser parser;

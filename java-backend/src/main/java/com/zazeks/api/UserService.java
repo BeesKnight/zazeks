@@ -2,6 +2,7 @@ package com.zazeks.api;
 
 import com.zazeks.database.InMemoryDatabase;
 import com.zazeks.database.models.User;
+import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
 import java.io.ByteArrayInputStream;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 /**
  * Java-аналог модуля {@code backend/src/api/user.py}.
  */
+@Service
 public class UserService {
     private static final long MAX_IMAGE_SIZE_BYTES = 5L * 1024L * 1024L;
 

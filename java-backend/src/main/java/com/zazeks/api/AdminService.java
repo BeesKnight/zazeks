@@ -1,10 +1,13 @@
-package com.zazeks.api.admin;
+package com.zazeks.api;
 
 import com.zazeks.database.InMemoryDatabase;
 import com.zazeks.database.models.Admin;
+import com.zazeks.database.models.DetectionMetadata;
+import com.zazeks.database.models.MultiplayerSession;
 import com.zazeks.database.models.User;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -62,5 +65,13 @@ public class AdminService {
                 .orElseThrow(() -> new NoSuchElementException("User not found"));
         user.setUsername(newUsername);
         database.saveUser(user);
+    }
+
+    public List<MultiplayerSession> listMultiplayerSessions() {
+        return database.findAllMultiplayerSessions();
+    }
+
+    public List<DetectionMetadata> listDetections(Integer userId) {
+        return database.findDetectionMetadataByUser(userId);
     }
 }

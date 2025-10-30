@@ -5,13 +5,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zazeks.database.InMemoryDatabase;
 import com.zazeks.database.models.MultiplayerGame;
+import com.zazeks.database.models.MultiplayerSession;
 import com.zazeks.database.models.User;
+import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -21,7 +24,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
+@Service
 public class MultiplayerService {
     private final InMemoryDatabase database;
     private final ObjectMapper objectMapper;
@@ -69,6 +74,7 @@ public class MultiplayerService {
                     "message", "Игрок " + player.userId + " отключился."
             ));
             match.broadcastExcept(player, disconnectMessage);
+            updateSession(match, sessionState -> sessionState.updateStatus(MultiplayerSession.Status.CANCELLED));
             activeMatches.remove(match.id());
         });
     }
@@ -104,6 +110,9 @@ public class MultiplayerService {
             return;
         }
         MultiplayerMatch match = MultiplayerMatch.create(player1, player2);
+        MultiplayerSession session = new MultiplayerSession(match.id(), player1.userId, player2.userId);
+        database.saveMultiplayerSession(session);
+        match.attachSession(session);
         activeMatches.put(match.id(), match);
         String matchMessage = toJson(Map.of(
                 "action", "match_found",
@@ -142,6 +151,7 @@ public class MultiplayerService {
         if (match.allReady() && !match.isBattleStarted()) {
             match.setBattleStarted(true);
             match.setConcluded(false);
+            updateSession(match, sessionState -> sessionState.updateStatus(MultiplayerSession.Status.IN_PROGRESS));
             String startMessage = toJson(Map.of(
                     "action", "battle_start",
                     "duration", 10
@@ -166,6 +176,7 @@ public class MultiplayerService {
                 "user_id", player.userId
         ));
         match.broadcast(message);
+        updateSession(match, sessionState -> sessionState.updateStatus(MultiplayerSession.Status.MATCHED));
     }
 
     private void handleGesture(WebSocketSession session, JsonNode node) {
@@ -202,6 +213,7 @@ public class MultiplayerService {
                     "action", "replay",
                     "message", "Начните новую битву, нажмите 'Готов'."
             )));
+            updateSession(match, MultiplayerSession::resetForReplay);
         }
     }
 
@@ -253,6 +265,25 @@ public class MultiplayerService {
                 "game_id", savedGame.getId()
         )));
         match.setBattleStarted(false);
+        updateSession(match, sessionState -> {
+            sessionState.setGestures(normalizeGesture(g1), normalizeGesture(g2));
+            String normalizedWinner = "draw".equals(winnerId) ? null : winnerId;
+            sessionState.setOutcome(determineWinnerKey(match, winnerId), normalizedWinner);
+            sessionState.updateStatus(MultiplayerSession.Status.COMPLETED);
+        });
+    }
+
+    private String determineWinnerKey(MultiplayerMatch match, String winnerId) {
+        if ("draw".equals(winnerId)) {
+            return "draw";
+        }
+        if (String.valueOf(match.player1().userId).equals(winnerId)) {
+            return "player1";
+        }
+        if (String.valueOf(match.player2().userId).equals(winnerId)) {
+            return "player2";
+        }
+        return winnerId;
     }
 
     private MultiplayerGame saveMatch(MultiplayerMatch match, String g1, String g2, String winnerId) {
@@ -267,8 +298,8 @@ public class MultiplayerService {
         MultiplayerGame saved = database.saveMultiplayerGame(new MultiplayerGame(
                 match.player1().userId,
                 match.player2().userId,
-                g1.toLowerCase(),
-                g2.toLowerCase(),
+                normalizeGesture(g1),
+                normalizeGesture(g2),
                 resultKey
         ));
         updateOnlineStats(match.player1().userId, resultKey.equals("player1"));
@@ -294,8 +325,8 @@ public class MultiplayerService {
     }
 
     private String determineResult(String gesture1, String gesture2) {
-        String g1 = gesture1 == null ? "none" : gesture1.trim().toLowerCase();
-        String g2 = gesture2 == null ? "none" : gesture2.trim().toLowerCase();
+        String g1 = gesture1 == null ? "none" : gesture1.trim().toLowerCase(Locale.ROOT);
+        String g2 = gesture2 == null ? "none" : gesture2.trim().toLowerCase(Locale.ROOT);
         if (!"none".equals(g1) && "none".equals(g2)) {
             return "win";
         }
@@ -313,6 +344,14 @@ public class MultiplayerService {
         return "loss";
     }
 
+    private String normalizeGesture(String gesture) {
+        if (gesture == null) {
+            return "none";
+        }
+        String trimmed = gesture.trim();
+        return trimmed.isEmpty() ? "none" : trimmed.toLowerCase(Locale.ROOT);
+    }
+
     private String toJson(Object value) {
         try {
             return objectMapper.writeValueAsString(value);
@@ -323,6 +362,14 @@ public class MultiplayerService {
 
     public void shutdown() {
         scheduler.shutdownNow();
+    }
+
+    private void updateSession(MultiplayerMatch match, Consumer<MultiplayerSession> consumer) {
+        MultiplayerSession session = match.session();
+        if (session != null) {
+            consumer.accept(session);
+            database.saveMultiplayerSession(session);
+        }
     }
 
     public record PlayerConnection(int userId, WebSocketSession session) {}
@@ -337,6 +384,7 @@ public class MultiplayerService {
         private volatile boolean concluded = false;
         private volatile ScheduledFuture<?> scheduledTask;
         private final String id;
+        private volatile MultiplayerSession session;
 
         private MultiplayerMatch(PlayerConnection player1, PlayerConnection player2) {
             this.player1 = player1;
@@ -363,28 +411,39 @@ public class MultiplayerService {
             return player2;
         }
 
+        public void attachSession(MultiplayerSession session) {
+            this.session = session;
+        }
+
+        public MultiplayerSession session() {
+            return session;
+        }
+
         public boolean contains(PlayerConnection player) {
             return player1.session.getId().equals(player.session.getId()) ||
                     player2.session.getId().equals(player.session.getId());
         }
 
         public void broadcast(String message) {
-            try {
-                player1.session.sendMessage(new TextMessage(message));
-                player2.session.sendMessage(new TextMessage(message));
-            } catch (IOException ignored) {
-            }
+            sendSafe(player1.session, message);
+            sendSafe(player2.session, message);
         }
 
         public void broadcastExcept(PlayerConnection excluded, String message) {
-            try {
-                if (!player1.session.getId().equals(excluded.session.getId())) {
-                    player1.session.sendMessage(new TextMessage(message));
+            if (!player1.session.getId().equals(excluded.session.getId())) {
+                sendSafe(player1.session, message);
+            }
+            if (!player2.session.getId().equals(excluded.session.getId())) {
+                sendSafe(player2.session, message);
+            }
+        }
+
+        private void sendSafe(WebSocketSession session, String message) {
+            synchronized (session) {
+                try {
+                    session.sendMessage(new TextMessage(message));
+                } catch (IOException ignored) {
                 }
-                if (!player2.session.getId().equals(excluded.session.getId())) {
-                    player2.session.sendMessage(new TextMessage(message));
-                }
-            } catch (IOException ignored) {
             }
         }
 
