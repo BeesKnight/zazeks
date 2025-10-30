@@ -70,6 +70,18 @@ public class InMemoryDatabase {
                 .collect(Collectors.toList());
     }
 
+    public List<Game> findAllGames() {
+        return new ArrayList<>(games.values());
+    }
+
+    public void deleteGame(int gameId) {
+        games.remove(gameId);
+    }
+
+    public void deleteGamesByUser(int userId) {
+        games.values().removeIf(game -> game.getUserId() == userId);
+    }
+
     public Optional<Game> findDuplicateGame(int userId, String userChoice, String computerChoice, String result, Duration threshold) {
         Instant cutoff = Instant.now().minus(threshold);
         return games.values().stream()
@@ -87,6 +99,24 @@ public class InMemoryDatabase {
         }
         multiplayerGames.put(game.getId(), game);
         return game;
+    }
+
+    public Optional<MultiplayerGame> findMultiplayerGameById(int id) {
+        return Optional.ofNullable(multiplayerGames.get(id));
+    }
+
+    public List<MultiplayerGame> findAllMultiplayerGames() {
+        return new ArrayList<>(multiplayerGames.values());
+    }
+
+    public void deleteMultiplayerGamesByUser(int userId) {
+        multiplayerGames.values().removeIf(game -> game.getPlayer1Id() == userId || game.getPlayer2Id() == userId);
+    }
+
+    public void deleteUser(int userId) {
+        users.remove(userId);
+        deleteGamesByUser(userId);
+        deleteMultiplayerGamesByUser(userId);
     }
 
     public void reset() {
