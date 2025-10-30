@@ -72,6 +72,36 @@ goto fail
 
 set CLASSPATH=
 
+set WRAPPER_JAR=%APP_HOME%\gradle\wrapper\gradle-wrapper.jar
+set WRAPPER_BASE64=%WRAPPER_JAR%.base64
+if exist "%WRAPPER_JAR%" goto runGradle
+
+if exist "%WRAPPER_BASE64%" (
+    powershell -NoProfile -Command "try { $src = '%WRAPPER_BASE64%'; $dst = '%WRAPPER_JAR%'; $dir = Split-Path -Parent $dst; if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }; $bytes = [Convert]::FromBase64String([IO.File]::ReadAllText($src)); [IO.File]::WriteAllBytes($dst, $bytes) } catch { exit 1 }"
+    if exist "%WRAPPER_JAR%" goto runGradle
+    echo ERROR: Failed to decode %WRAPPER_BASE64%. 1>&2
+    goto fail
+)
+
+set WRAPPER_PROPERTIES=%APP_HOME%\gradle\wrapper\gradle-wrapper.properties
+if not exist "%WRAPPER_PROPERTIES%" (
+    echo ERROR: Required file gradle\wrapper\gradle-wrapper.properties is missing. 1>&2
+    goto fail
+)
+
+for /f "usebackq tokens=1,* delims==" %%A in (`findstr /R "^distributionUrl=" "%WRAPPER_PROPERTIES%"`) do set DISTRIBUTION_URL=%%B
+if "%DISTRIBUTION_URL%"=="" (
+    echo ERROR: Could not read distributionUrl from %WRAPPER_PROPERTIES%. 1>&2
+    goto fail
+)
+
+powershell -NoProfile -Command "try { $url = '%DISTRIBUTION_URL%'.Replace('\\',''); if ($url -match 'gradle-([0-9.]+)-') { $v = $Matches[1]; $wrapperUrl = \"https://repo1.maven.org/maven2/org/gradle/gradle-wrapper/$v/gradle-wrapper-$v.jar\"; New-Item -ItemType Directory -Force -Path (Split-Path -Parent '%WRAPPER_JAR%') | Out-Null; Invoke-WebRequest -Uri $wrapperUrl -OutFile '%WRAPPER_JAR%' -UseBasicParsing } else { exit 1 } } catch { exit 1 }"
+if not exist "%WRAPPER_JAR%" (
+    echo ERROR: Unable to download Gradle wrapper JAR. 1>&2
+    goto fail
+)
+
+:runGradle
 
 @rem Execute Gradle
 "%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -classpath "%CLASSPATH%" -jar "%APP_HOME%\gradle\wrapper\gradle-wrapper.jar" %*
