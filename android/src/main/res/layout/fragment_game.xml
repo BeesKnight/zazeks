@@ -107,9 +107,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:alignmentMode="alignMargins"
-                android:columnCount="3"
-                android:useDefaultMargins="true" />
+                app:alignmentMode="alignMargins"
+                app:columnCount="3"
+                app:useDefaultMargins="true" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/quitButton"
