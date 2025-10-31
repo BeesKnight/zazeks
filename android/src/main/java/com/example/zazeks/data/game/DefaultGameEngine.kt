@@ -45,13 +45,13 @@ class DefaultGameEngine @Inject constructor(
         mutex.withLock {
             val saved = repository.loadActive()
                 ?: run {
-                    val failure = GameResult.failure<GameSnapshot>(GameError.SessionExpired())
+                    val failure = GameResult.failure(GameError.SessionExpired())
                     stateFlow.tryEmit(failure)
                     return@withLock failure
                 }
             val restoredState = EngineState.fromSnapshot(saved)
                 ?: run {
-                    val failure = GameResult.failure<GameSnapshot>(GameError.DataCorrupted())
+                    val failure = GameResult.failure(GameError.DataCorrupted())
                     stateFlow.tryEmit(failure)
                     return@withLock failure
                 }
@@ -64,15 +64,15 @@ class DefaultGameEngine @Inject constructor(
 
     override suspend fun playMove(row: Int, column: Int): GameResult<GameSnapshot> = withContext(ioDispatcher) {
         mutex.withLock {
-            val current = state ?: return@withLock GameResult.failure<GameSnapshot>(GameError.SessionExpired())
+            val current = state ?: return@withLock GameResult.failure(GameError.SessionExpired())
             if (current.isCompleted) {
-                return@withLock GameResult.failure<GameSnapshot>(GameError.SessionExpired(current.sessionId))
+                return@withLock GameResult.failure(GameError.SessionExpired(current.sessionId))
             }
             if (!current.isWithinBoard(row, column)) {
-                return@withLock GameResult.failure<GameSnapshot>(GameError.InvalidMove("Координаты вне доски"))
+                return@withLock GameResult.failure(GameError.InvalidMove("Координаты вне доски"))
             }
             if (!current.isCellFree(row, column)) {
-                return@withLock GameResult.failure<GameSnapshot>(GameError.InvalidMove("Клетка уже занята"))
+                return@withLock GameResult.failure(GameError.InvalidMove("Клетка уже занята"))
             }
             val updated = current.applyMove(row, column)
             state = updated
