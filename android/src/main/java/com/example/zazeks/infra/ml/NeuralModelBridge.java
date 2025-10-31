@@ -19,7 +19,7 @@ import org.json.JSONObject;
 
 /**
  * Adapter that forwards frames produced by the Android game engine to the
- * Python recognition service. The bridge is synchronous to simplify
+ * recognition service. The bridge is synchronous to simplify
  * integration with the existing coroutine-based game flow.
  */
 public final class NeuralModelBridge {
@@ -28,15 +28,21 @@ public final class NeuralModelBridge {
     private final OkHttpClient httpClient;
     private final HttpUrl detectEndpoint;
 
-    private NeuralModelBridge(OkHttpClient httpClient, HttpUrl detectEndpoint) {
-        this.httpClient = httpClient;
-        this.detectEndpoint = detectEndpoint;
+    /** Canonical ctor. */
+    public NeuralModelBridge(OkHttpClient httpClient, HttpUrl detectEndpoint) {
+        this.httpClient = Objects.requireNonNull(httpClient, "httpClient");
+        this.detectEndpoint = Objects.requireNonNull(detectEndpoint, "detectEndpoint");
+    }
+
+    /** Convenience overload accepting a String URL. */
+    public NeuralModelBridge(OkHttpClient httpClient, String detectEndpoint) {
+        this(httpClient, requireHttpUrl(detectEndpoint));
     }
 
     /**
      * Factory method that configures the bridge in remote HTTP mode.
      *
-     * @param baseUrl base URL of the Python backend, e.g. {@code http://10.0.2.2:8000/}
+     * @param baseUrl base URL of the backend, e.g. {@code http://10.0.2.2:8000/}
      */
     public static NeuralModelBridge remoteHttp(String baseUrl) {
         Objects.requireNonNull(baseUrl, "baseUrl");
@@ -49,32 +55,38 @@ public final class NeuralModelBridge {
             throw new IllegalArgumentException("Unable to resolve /model/detect using base URL: " + baseUrl);
         }
         OkHttpClient client = new OkHttpClient.Builder()
-            .retryOnConnectionFailure(true)
-            .build();
+                .retryOnConnectionFailure(true)
+                .build();
         return new NeuralModelBridge(client, endpoint);
     }
 
-    public NeuralModelBridge(OkHttpClient httpClient, HttpUrl detectEndpoint) {
-        this.httpClient = Objects.requireNonNull(httpClient, "httpClient");
-        this.detectEndpoint = Objects.requireNonNull(detectEndpoint, "detectEndpoint");
+    private static HttpUrl requireHttpUrl(String url) {
+        HttpUrl parsed = HttpUrl.parse(Objects.requireNonNull(url, "detectEndpoint"));
+        if (parsed == null) {
+            throw new IllegalArgumentException("Invalid detectEndpoint URL: " + url);
+        }
+        return parsed;
     }
 
     /**
      * Performs gesture detection. The frame is sent as multipart/form-data using
-     * the same contract that the Python FastAPI service expects.
+     * the same contract that the backend service expects.
      */
     public DetectionResult detect(GameFrame frame) throws IOException {
         Objects.requireNonNull(frame, "frame");
+
+        // NB: For OkHttp4 from Java this overload is valid: (MediaType, byte[])
         RequestBody imageBody = RequestBody.create(MEDIA_TYPE_JPEG, frame.getImageBytes());
+
         MultipartBody requestBody = new MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
-            .addFormDataPart("file", buildFileName(frame), imageBody)
-            .build();
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", buildFileName(frame), imageBody)
+                .build();
 
         Request request = new Request.Builder()
-            .url(detectEndpoint)
-            .post(requestBody)
-            .build();
+                .url(detectEndpoint)
+                .post(requestBody)
+                .build();
 
         try (Response response = httpClient.newCall(request).execute()) {
             if (!response.isSuccessful()) {
@@ -93,6 +105,7 @@ public final class NeuralModelBridge {
             JSONObject json = new JSONObject(body);
             String gesture = json.optString("gesture", "Unknown");
             JSONArray bboxJson = json.optJSONArray("bbox");
+
             int[] bbox = new int[0];
             if (bboxJson != null && bboxJson.length() == 4) {
                 bbox = new int[4];
@@ -101,12 +114,18 @@ public final class NeuralModelBridge {
                 }
             }
             return new DetectionResult(gesture, bbox);
-        } catch (JSONException jsonException) {
-            throw new IOException("Failed to parse model response", jsonException);
+        } catch (JSONException e) {
+            throw new IOException("Failed to parse model response", e);
         }
     }
 
     private static String buildFileName(GameFrame frame) {
-        return String.format(Locale.US, "frame_%dx%d_%d.jpg", frame.getWidth(), frame.getHeight(), frame.getTimestampMillis());
+        return String.format(
+                Locale.US,
+                "frame_%dx%d_%d.jpg",
+                frame.getWidth(),
+                frame.getHeight(),
+                frame.getTimestampMillis()
+        );
     }
 }
