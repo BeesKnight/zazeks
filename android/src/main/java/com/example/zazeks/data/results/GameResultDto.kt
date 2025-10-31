@@ -1,12 +1,12 @@
 package com.example.zazeks.data.results
 
-import com.google.gson.annotations.SerializedName
+import com.squareup.moshi.Json
 
 data class GameResultDto(
-    @SerializedName("id") val id: Int?,
-    @SerializedName("userId") val userId: Int,
-    @SerializedName("userChoice") val userChoice: String?,
-    @SerializedName("computerChoice") val computerChoice: String?,
-    @SerializedName("result") val result: String?,
-    @SerializedName("timestamp") val timestamp: String?
+    @Json(name = "id") val id: Int?,
+    @Json(name = "userId") val userId: Int,
+    @Json(name = "userChoice") val userChoice: String?,
+    @Json(name = "computerChoice") val computerChoice: String?,
+    @Json(name = "result") val result: String?,
+    @Json(name = "timestamp") val timestamp: String?
 )

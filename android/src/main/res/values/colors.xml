@@ -28,6 +28,12 @@
     <color name="color_state_warning">#FACC15</color>
     <color name="color_state_error">#FF6B81</color>
 
+    <!-- Additional backgrounds -->
+    <color name="surface_light">#1F1C42</color>
+
+    <!-- Legacy launcher palette -->
+    <color name="purple_500">#6200EE</color>
+
     <!-- Legacy neutrals -->
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>

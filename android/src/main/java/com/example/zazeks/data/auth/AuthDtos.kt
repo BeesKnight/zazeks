@@ -1,6 +1,6 @@
 package com.example.zazeks.data.auth
 
-import com.google.gson.annotations.SerializedName
+import com.squareup.moshi.Json
 
 data class RegisterRequest(
     val username: String,
@@ -8,7 +8,7 @@ data class RegisterRequest(
 )
 
 data class RegistrationResponse(
-    @SerializedName("userId") val userId: Int,
+    @Json(name = "userId") val userId: Int,
     val message: String,
 )
 
@@ -18,7 +18,7 @@ data class LoginRequest(
 )
 
 data class LoginResultDto(
-    @SerializedName("accessToken") val accessToken: String,
-    @SerializedName("tokenType") val tokenType: String,
-    @SerializedName("userId") val userId: Int,
+    @Json(name = "accessToken") val accessToken: String,
+    @Json(name = "tokenType") val tokenType: String,
+    @Json(name = "userId") val userId: Int,
 )
