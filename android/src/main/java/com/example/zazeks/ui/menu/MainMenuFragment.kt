@@ -31,12 +31,12 @@ class MainMenuFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.startNewGameButton.setOnClickListener {
-            findNavController().navigate(R.id.action_mainMenuFragment_to_gameFragment, Bundle().apply {
+            findNavController().navigate(R.id.action_mainMenuFragment_to_offlineMatchFragment, Bundle().apply {
                 putBoolean(ARG_START_NEW_GAME, true)
             })
         }
         binding.resumeGameButton.setOnClickListener {
-            findNavController().navigate(R.id.action_mainMenuFragment_to_gameFragment, Bundle().apply {
+            findNavController().navigate(R.id.action_mainMenuFragment_to_offlineMatchFragment, Bundle().apply {
                 putBoolean(ARG_RESUME_GAME, true)
             })
         }

@@ -1,33 +1,38 @@
-package com.example.zazeks.ui.game
+package com.example.zazeks.ui.offline
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.zazeks.R
+import com.example.zazeks.di.IoDispatcher
+import com.example.zazeks.domain.game.AbandonGameUseCase
+import com.example.zazeks.domain.game.ConfirmRoundResultUseCase
 import com.example.zazeks.domain.game.GameError
 import com.example.zazeks.domain.game.GameResult
 import com.example.zazeks.domain.game.GameSnapshot
 import com.example.zazeks.domain.game.ObserveGameStateUseCase
-import com.example.zazeks.domain.game.ConfirmRoundResultUseCase
+import com.example.zazeks.domain.game.RestartRoundUseCase
 import com.example.zazeks.domain.game.ResumeGameUseCase
 import com.example.zazeks.domain.game.StartNewGameUseCase
-import com.example.zazeks.domain.game.AbandonGameUseCase
-import com.example.zazeks.domain.game.RestartRoundUseCase
 import com.example.zazeks.domain.game.SubmitGestureUseCase
+import com.example.zazeks.infra.ml.GameFrame
+import com.example.zazeks.infra.ml.NeuralModelBridge
 import com.example.zazeks.ui.common.Event
-import com.example.zazeks.ui.game.GameEffect.NavigateToMenu
-import com.example.zazeks.ui.game.GameResultArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.io.IOException
+import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import kotlinx.coroutines.withContext
 
 @HiltViewModel
-class GameViewModel @Inject constructor(
+class OfflineMatchViewModel @Inject constructor(
     private val observeGameStateUseCase: ObserveGameStateUseCase,
     private val startNewGameUseCase: StartNewGameUseCase,
     private val resumeGameUseCase: ResumeGameUseCase,
@@ -35,20 +40,28 @@ class GameViewModel @Inject constructor(
     private val restartRoundUseCase: RestartRoundUseCase,
     private val confirmRoundResultUseCase: ConfirmRoundResultUseCase,
     private val abandonGameUseCase: AbandonGameUseCase,
+    private val neuralModelBridge: NeuralModelBridge,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val mutableState = MutableLiveData<ViewState>()
-    private val mutableEffects = MutableLiveData<Event<GameEffect>>()
+    private val mutableEffects = MutableLiveData<Event<OfflineMatchEffect>>()
     private var observationJob: Job? = null
-    private var latestContent: GameUiModel? = runCatching {
-        savedStateHandle.get<GameUiModel>(SAVED_STATE_KEY)
+    private var latestSession: OfflineMatchUiModel? = runCatching {
+        savedStateHandle.get<OfflineMatchUiModel>(SAVED_SESSION_KEY)
     }.getOrNull()
+    private var latestDetection: DetectionUiModel = runCatching {
+        savedStateHandle.get<DetectionUiModel>(SAVED_DETECTION_KEY)
+    }.getOrNull() ?: DetectionUiModel()
+    private var detectionJob: Job? = null
     private var lastError: GameError? = null
     private var completionSignature: String? = null
 
     init {
-        latestContent?.let { mutableState.value = ViewState.Content(it) }
+        latestSession?.let { session ->
+            mutableState.value = ViewState.Content(session, latestDetection)
+        }
     }
 
     fun observeGameState(): LiveData<ViewState> {
@@ -58,70 +71,160 @@ class GameViewModel @Inject constructor(
         if (observationJob == null) {
             observationJob = observeGameStateUseCase()
                 .onEach { result -> handleResult(result) }
-                .catch { throwable -> mutableState.postValue(mapError(GameError.Unknown(throwable))) }
+                .catch { throwable ->
+                    mutableState.postValue(mapError(GameError.Unknown(throwable)))
+                }
                 .launchIn(viewModelScope)
         }
         return mutableState
     }
 
-    fun effects(): LiveData<Event<GameEffect>> = mutableEffects
+    fun effects(): LiveData<Event<OfflineMatchEffect>> = mutableEffects
 
-    fun onStartNewGame() {
+    fun onStartNewMatch() {
+        detectionJob?.cancel()
+        latestDetection = DetectionUiModel()
+        savedStateHandle[SAVED_DETECTION_KEY] = latestDetection
         mutableState.value = ViewState.Loading
         viewModelScope.launch {
             handleResult(startNewGameUseCase())
         }
     }
 
-    fun onResumeGame() {
+    fun onResumeMatch() {
+        detectionJob?.cancel()
+        latestDetection = DetectionUiModel()
+        savedStateHandle[SAVED_DETECTION_KEY] = latestDetection
         viewModelScope.launch {
             mutableState.postValue(ViewState.Loading)
             handleResult(resumeGameUseCase())
         }
     }
 
-    fun onGestureSelected(gesture: String) {
-        viewModelScope.launch {
-            handleResult(submitGestureUseCase(gesture))
+    fun onReadyAction() {
+        val session = latestSession ?: return
+        when {
+            session.isMatchCompleted || session.isRoundCompleted -> confirmRoundResult()
+            else -> submitDetectedGesture()
         }
     }
 
     fun onRestartRound() {
+        detectionJob?.cancel()
+        updateDetection(DetectionUiModel())
         viewModelScope.launch {
             handleResult(restartRoundUseCase())
-        }
-    }
-
-    fun onConfirmRoundResult() {
-        viewModelScope.launch {
-            handleResult(confirmRoundResultUseCase())
         }
     }
 
     fun onQuitToMenu() {
         viewModelScope.launch {
             abandonGameUseCase()
-            mutableEffects.postValue(Event(NavigateToMenu))
+            mutableEffects.postValue(Event(OfflineMatchEffect.NavigateToMenu))
         }
     }
 
     fun onErrorAction() {
         when (val error = lastError) {
-            is GameError.SessionExpired -> mutableEffects.postValue(Event(NavigateToMenu))
+            is GameError.SessionExpired -> mutableEffects.postValue(Event(OfflineMatchEffect.NavigateToMenu))
             else -> {
-                val previous = latestContent
-                if (previous != null) {
-                    mutableState.value = ViewState.Content(previous)
+                val session = latestSession
+                if (session != null) {
+                    mutableState.value = ViewState.Content(session, latestDetection)
                 } else {
-                    onResumeGame()
+                    onResumeMatch()
                 }
             }
         }
     }
 
+    fun onFrameCaptured(frame: GameFrame) {
+        val session = latestSession ?: return
+        if (session.isRoundCompleted || session.isMatchCompleted) return
+        if (detectionJob?.isActive == true) return
+        detectionJob = viewModelScope.launch {
+            updateDetection(
+                latestDetection.copy(
+                    isProcessing = true,
+                    errorMessage = null,
+                    errorMessageRes = null
+                )
+            )
+            try {
+                val result = withContext(ioDispatcher) { neuralModelBridge.detect(frame) }
+                val gesture = result.gesture.orEmpty().ifBlank { null }
+                updateDetection(
+                    latestDetection.copy(
+                        gesture = gesture,
+                        isProcessing = false,
+                        errorMessage = null,
+                        errorMessageRes = null
+                    )
+                )
+            } catch (ioException: IOException) {
+                updateDetection(
+                    latestDetection.copy(
+                        isProcessing = false,
+                        errorMessage = ioException.localizedMessage,
+                        errorMessageRes = R.string.offline_detection_error
+                    )
+                )
+            } catch (throwable: Throwable) {
+                updateDetection(
+                    latestDetection.copy(
+                        isProcessing = false,
+                        errorMessage = throwable.localizedMessage,
+                        errorMessageRes = R.string.offline_detection_error
+                    )
+                )
+            }
+        }
+    }
+
+    fun onCameraPermissionDenied() {
+        updateDetection(
+            latestDetection.copy(
+                isProcessing = false,
+                errorMessage = null,
+                errorMessageRes = R.string.offline_permission_required
+            )
+        )
+    }
+
     override fun onCleared() {
         observationJob?.cancel()
+        detectionJob?.cancel()
         super.onCleared()
+    }
+
+    private fun submitDetectedGesture() {
+        val gesture = latestDetection.gesture?.takeIf { it.isNotBlank() }
+        if (gesture == null) {
+            updateDetection(
+                latestDetection.copy(
+                    errorMessage = null,
+                    errorMessageRes = R.string.offline_detection_unknown
+                )
+            )
+            return
+        }
+        detectionJob?.cancel()
+        updateDetection(
+            latestDetection.copy(
+                isProcessing = true,
+                errorMessage = null,
+                errorMessageRes = null
+            )
+        )
+        viewModelScope.launch {
+            handleResult(submitGestureUseCase(gesture.lowercase()))
+        }
+    }
+
+    private fun confirmRoundResult() {
+        viewModelScope.launch {
+            handleResult(confirmRoundResultUseCase())
+        }
     }
 
     private fun handleResult(result: GameResult<GameSnapshot>) {
@@ -134,9 +237,24 @@ class GameViewModel @Inject constructor(
     private fun handleSnapshot(snapshot: GameSnapshot) {
         lastError = null
         val uiModel = snapshot.toUiModel()
-        latestContent = uiModel
-        savedStateHandle[SAVED_STATE_KEY] = uiModel
-        mutableState.postValue(ViewState.Content(uiModel))
+        latestSession = uiModel
+        savedStateHandle[SAVED_SESSION_KEY] = uiModel
+
+        if (!snapshot.isRoundCompleted && snapshot.playerGesture.isNullOrBlank()) {
+            updateDetection(DetectionUiModel())
+        } else if (!snapshot.playerGesture.isNullOrBlank()) {
+            updateDetection(
+                DetectionUiModel(
+                    gesture = snapshot.playerGesture,
+                    isProcessing = false,
+                    errorMessage = null,
+                    errorMessageRes = null
+                )
+            )
+        } else {
+            postContent()
+        }
+
         if (snapshot.isMatchCompleted) {
             emitCompletionIfNeeded(snapshot)
         } else {
@@ -150,7 +268,7 @@ class GameViewModel @Inject constructor(
             completionSignature = signature
             mutableEffects.postValue(
                 Event(
-                    GameEffect.NavigateToResults(
+                    OfflineMatchEffect.NavigateToResults(
                         GameResultArgs(
                             sessionId = snapshot.sessionId,
                             playerGesture = snapshot.playerGesture,
@@ -166,8 +284,8 @@ class GameViewModel @Inject constructor(
         }
     }
 
-    private fun GameSnapshot.toUiModel(): GameUiModel {
-        return GameUiModel(
+    private fun GameSnapshot.toUiModel(): OfflineMatchUiModel {
+        return OfflineMatchUiModel(
             sessionId = sessionId,
             round = round,
             playerGesture = playerGesture,
@@ -236,7 +354,19 @@ class GameViewModel @Inject constructor(
         }
     }
 
+    private fun postContent() {
+        val session = latestSession ?: return
+        mutableState.postValue(ViewState.Content(session, latestDetection))
+    }
+
+    private fun updateDetection(detection: DetectionUiModel) {
+        latestDetection = detection
+        savedStateHandle[SAVED_DETECTION_KEY] = detection
+        postContent()
+    }
+
     companion object {
-        private const val SAVED_STATE_KEY = "game_ui_model"
+        private const val SAVED_SESSION_KEY = "offline_match_session"
+        private const val SAVED_DETECTION_KEY = "offline_match_detection"
     }
 }

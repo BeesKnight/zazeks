@@ -1,11 +1,11 @@
-package com.example.zazeks.ui.game
+package com.example.zazeks.ui.offline
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
-sealed class GameEffect {
-    data class NavigateToResults(val result: GameResultArgs) : GameEffect()
-    object NavigateToMenu : GameEffect()
+sealed class OfflineMatchEffect {
+    data class NavigateToResults(val result: GameResultArgs) : OfflineMatchEffect()
+    object NavigateToMenu : OfflineMatchEffect()
 }
 
 @Parcelize
