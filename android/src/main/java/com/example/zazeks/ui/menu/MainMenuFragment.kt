@@ -35,6 +35,9 @@ class MainMenuFragment : Fragment() {
                 putBoolean(ARG_START_NEW_GAME, true)
             })
         }
+        binding.startOnlineMatchButton.setOnClickListener {
+            findNavController().navigate(R.id.action_mainMenuFragment_to_onlineMatchFragment)
+        }
         binding.resumeGameButton.setOnClickListener {
             findNavController().navigate(R.id.action_mainMenuFragment_to_offlineMatchFragment, Bundle().apply {
                 putBoolean(ARG_RESUME_GAME, true)
