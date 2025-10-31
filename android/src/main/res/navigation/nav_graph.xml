@@ -33,6 +33,9 @@
         <action
             android:id="@+id/action_mainMenuFragment_to_onlineMatchFragment"
             app:destination="@id/onlineMatchFragment" />
+        <action
+            android:id="@+id/action_mainMenuFragment_to_profileFragment"
+            app:destination="@id/profileFragment" />
     </fragment>
 
     <fragment
@@ -78,5 +81,14 @@
         <action
             android:id="@+id/action_resultsFragment_to_onlineMatchFragment"
             app:destination="@id/onlineMatchFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.zazeks.ui.profile.ProfileFragment"
+        android:label="@string/profile_title">
+        <argument
+            android:name="userId"
+            android:argType="integer" />
     </fragment>
 </navigation>

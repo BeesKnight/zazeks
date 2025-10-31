@@ -100,4 +100,26 @@
     <string name="auth_register_button">Создать аккаунт</string>
     <string name="auth_error_generic">Что-то пошло не так. Попробуйте снова.</string>
     <string name="auth_logout">Выйти</string>
+    <string name="profile_title">Профиль</string>
+    <string name="profile_edit">Редактировать</string>
+    <string name="profile_save">Сохранить</string>
+    <string name="profile_cancel">Отмена</string>
+    <string name="profile_change_photo">Изменить фото</string>
+    <string name="profile_stats_title">Статистика</string>
+    <string name="profile_stats_offline">Офлайн статистика</string>
+    <string name="profile_stats_online">Онлайн статистика</string>
+    <string name="profile_stat_wins_format">Победы: %1$d</string>
+    <string name="profile_stat_games_format">Матчи: %1$d</string>
+    <string name="profile_winrate_title">Общий винрейт</string>
+    <string name="profile_winrate_value">Винрейт: %1$.0f%%</string>
+    <string name="profile_winrate_unknown">Винрейт: нет данных</string>
+    <string name="profile_error_load">Не удалось загрузить профиль. Попробуйте снова.</string>
+    <string name="profile_update_success">Профиль обновлён</string>
+    <string name="profile_update_error">Не удалось обновить профиль</string>
+    <string name="profile_avatar_error_type">Допускаются только PNG или JPG изображения</string>
+    <string name="profile_avatar_error_size">Размер изображения не должен превышать 5 МБ</string>
+    <string name="profile_avatar_content_description">Аватар профиля</string>
+    <string name="profile_username_hint">Новое имя пользователя</string>
+    <string name="profile_username_label">Имя пользователя</string>
+    <string name="profile_invalid_user">Пользователь не найден</string>
 </resources>
