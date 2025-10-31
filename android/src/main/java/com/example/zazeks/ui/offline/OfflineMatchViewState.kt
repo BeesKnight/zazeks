@@ -1,14 +1,17 @@
-package com.example.zazeks.ui.game
+package com.example.zazeks.ui.offline
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
 /**
- * Representation of the game screen state that the UI observes via LiveData.
+ * Representation of the offline match screen state that the UI observes via LiveData.
  */
 sealed class ViewState {
     object Loading : ViewState()
-    data class Content(val session: GameUiModel) : ViewState()
+    data class Content(
+        val session: OfflineMatchUiModel,
+        val detection: DetectionUiModel
+    ) : ViewState()
     data class Error(
         val title: String,
         val message: String,
@@ -23,7 +26,7 @@ sealed class ViewState {
  * UI friendly model of the game session, already formatted for rendering.
  */
 @Parcelize
-data class GameUiModel(
+data class OfflineMatchUiModel(
     val sessionId: String,
     val round: Int,
     val playerGesture: String?,
@@ -36,3 +39,16 @@ data class GameUiModel(
     val isRoundCompleted: Boolean,
     val isMatchCompleted: Boolean
 ) : Parcelable
+
+/**
+ * Represents the most recent gesture detection snapshot produced by the camera pipeline.
+ */
+@Parcelize
+data class DetectionUiModel(
+    val gesture: String? = null,
+    val isProcessing: Boolean = false,
+    val errorMessage: String? = null,
+    val errorMessageRes: Int? = null
+) : Parcelable {
+    fun hasGesture(): Boolean = !gesture.isNullOrBlank()
+}

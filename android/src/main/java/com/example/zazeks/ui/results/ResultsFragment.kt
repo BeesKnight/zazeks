@@ -10,8 +10,8 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.zazeks.R
 import com.example.zazeks.databinding.FragmentResultsBinding
-import com.example.zazeks.ui.game.GameFragment
-import com.example.zazeks.ui.game.GameResultArgs
+import com.example.zazeks.ui.offline.OfflineMatchFragment
+import com.example.zazeks.ui.offline.GameResultArgs
 import com.example.zazeks.ui.menu.MainMenuFragment
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -39,11 +39,11 @@ class ResultsFragment : Fragment() {
         }
         binding.newGameButton.setOnClickListener {
             val args = Bundle().apply { putBoolean(MainMenuFragment.ARG_START_NEW_GAME, true) }
-            findNavController().navigate(R.id.action_resultsFragment_to_gameFragment, args)
+            findNavController().navigate(R.id.action_resultsFragment_to_offlineMatchFragment, args)
         }
 
-        val args = arguments?.getParcelable<GameResultArgs>(GameFragment.ARG_GAME_RESULT)
-        arguments?.remove(GameFragment.ARG_GAME_RESULT)
+        val args = arguments?.getParcelable<GameResultArgs>(OfflineMatchFragment.ARG_GAME_RESULT)
+        arguments?.remove(OfflineMatchFragment.ARG_GAME_RESULT)
         viewModel.load(args)
 
         viewModel.state.observe(viewLifecycleOwner, ::renderState)

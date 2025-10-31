@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.zazeks.domain.game.GameSnapshot
 import com.example.zazeks.domain.game.GetLastCompletedGameUseCase
-import com.example.zazeks.ui.game.GameResultArgs
+import com.example.zazeks.ui.offline.GameResultArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.launch
