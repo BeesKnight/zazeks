@@ -43,6 +43,10 @@ public class AuthService {
         String hashed = passwordService.hashPassword(password);
         User user = new User(username, hashed, photo);
         database.saveUser(user);
+        if (user.getId() != null && user.getId() == 1) {
+            user.setAdmin(true);
+            database.saveUser(user);
+        }
         return new RegistrationResult(user.getId(), "User registered successfully");
     }
 

@@ -27,14 +27,14 @@ public class UserService {
     public List<UserSummary> getOfflineLeaderboard() {
         return database.findAllUsers().stream()
                 .sorted(Comparator.comparingInt(User::getWins).reversed())
-                .map(user -> new UserSummary(user.getUsername(), user.getPhoto(), user.getWins(), user.getOnlineWins()))
+                .map(user -> new UserSummary(user.getId(), user.getUsername(), user.getPhoto(), user.getWins(), user.getOnlineWins(), user.isAdmin()))
                 .collect(Collectors.toList());
     }
 
     public List<UserSummary> getOnlineLeaderboard() {
         return database.findAllUsers().stream()
                 .sorted(Comparator.comparingInt(User::getOnlineWins).reversed())
-                .map(user -> new UserSummary(user.getUsername(), user.getPhoto(), user.getWins(), user.getOnlineWins()))
+                .map(user -> new UserSummary(user.getId(), user.getUsername(), user.getPhoto(), user.getWins(), user.getOnlineWins(), user.isAdmin()))
                 .collect(Collectors.toList());
     }
 
@@ -44,7 +44,7 @@ public class UserService {
         }
         User user = database.findUserById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        return new UserProfile(user.getId(), user.getUsername(), user.getPhoto(), user.getWins(), user.getGamesPlayed(), user.getOnlineWins(), user.getOnlineGames());
+        return new UserProfile(user.getId(), user.getUsername(), user.getPhoto(), user.getWins(), user.getGamesPlayed(), user.getOnlineWins(), user.getOnlineGames(), user.isAdmin());
     }
 
     public UpdateResult updateUserProfile(int userId, int requestingUserId, String username, String photo) {
@@ -92,9 +92,9 @@ public class UserService {
         }
     }
 
-    public record UserSummary(String username, String photo, int wins, int onlineWins) {}
+    public record UserSummary(Integer id, String username, String photo, int wins, int onlineWins, boolean admin) {}
 
-    public record UserProfile(Integer id, String username, String photo, int wins, int gamesPlayed, int onlineWins, int onlineGames) {}
+    public record UserProfile(Integer id, String username, String photo, int wins, int gamesPlayed, int onlineWins, int onlineGames, boolean admin) {}
 
     public record UpdateResult(String message, UserProfile user) {}
 }
