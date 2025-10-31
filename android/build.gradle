@@ -16,8 +16,8 @@ android {
         applicationId 'com.example.zazeks'
         minSdk 24
         targetSdk 34
-        versionCode 1
-        versionName '1.0'
+        versionCode 2
+        versionName '1.0.0'
     }
 
     def signingProperties = new Properties()
@@ -25,7 +25,7 @@ android {
     if (signingFile.exists()) {
         signingFile.withInputStream { signingProperties.load(it) }
     }
-    def hasSigningConfig = signingProperties['storeFile']
+    boolean hasSigningConfig = signingProperties['storeFile'] != null
 
     signingConfigs {
         debug {
@@ -46,6 +46,15 @@ android {
         }
     }
 
+    def injectedSigningConfig = null
+    if (project.hasProperty('android.injected.signing.store.file')) {
+        injectedSigningConfig = signingConfigs.create('injected')
+        injectedSigningConfig.storeFile = file(project.property('android.injected.signing.store.file'))
+        injectedSigningConfig.storePassword = project.property('android.injected.signing.store.password')
+        injectedSigningConfig.keyAlias = project.property('android.injected.signing.key.alias')
+        injectedSigningConfig.keyPassword = project.property('android.injected.signing.key.password')
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix '.debug'
@@ -57,7 +66,9 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            if (hasSigningConfig) {
+            if (injectedSigningConfig != null) {
+                signingConfig injectedSigningConfig
+            } else if (hasSigningConfig) {
                 signingConfig signingConfigs.release
             }
         }

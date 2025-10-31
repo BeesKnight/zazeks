@@ -1,5 +1,1 @@
-{
-  "backendBaseUrl": "http://10.0.2.2:8080",
-  "detectionEndpoint": "/model/detect",
-  "timeoutSeconds": 15
-}
+{ "baseUrl": "http://45.155.207.118:8082" }
