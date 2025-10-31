@@ -55,4 +55,20 @@
     <string name="offline_detection_hint">Покажите жест перед камерой</string>
     <string name="offline_detection_unknown">Жест не распознан</string>
     <string name="offline_permission_required">Нужно разрешение камеры для распознавания жестов</string>
+    <string name="online_match_title">Онлайн матч</string>
+    <string name="menu_start_online">Онлайн матч</string>
+    <string name="online_you_label">Вы</string>
+    <string name="online_opponent_label">Соперник</string>
+    <string name="online_opponent_video_placeholder">Видео соперника недоступно</string>
+    <string name="online_ready_button">Готово!</string>
+    <string name="online_ready_cancel_button">Отменить готовность</string>
+    <string name="online_ready_status_ready">Готов</string>
+    <string name="online_ready_status_waiting">Не готов</string>
+    <string name="online_timer_format">Таймер: %1$.1f с</string>
+    <string name="online_score_format">Счёт: %1$d — %2$d</string>
+    <string name="online_match_result_format">Итог матча: %1$s</string>
+    <string name="online_stats_label">Статистика: %1$dW / %2$dL / %3$dD</string>
+    <string name="online_play_again">Сыграть ещё</string>
+    <string name="online_results_button">В результаты</string>
+    <string name="online_status_waiting">Ожидание соперника…</string>
 </resources>
