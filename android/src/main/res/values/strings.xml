@@ -2,6 +2,7 @@
     <string name="app_name">Zazeks</string>
     <string name="menu_title">Главное меню</string>
     <string name="game_title">Игра</string>
+    <string name="offline_match_title">Офлайн матч</string>
     <string name="results_title">Результаты</string>
     <string name="menu_start_new">Новая игра</string>
     <string name="menu_resume">Продолжить</string>
@@ -39,4 +40,19 @@
     <string name="results_new_game">Сыграть снова</string>
     <string name="results_empty_state">Завершённых матчей пока нет</string>
     <string name="error_retry">Повторить</string>
+    <string name="offline_you_label">Вы</string>
+    <string name="offline_ai_label">ИИ</string>
+    <string name="offline_ready">Готово!</string>
+    <string name="offline_restart">Заново</string>
+    <string name="offline_quit">В меню</string>
+    <string name="offline_timer_format">Осталось: %1$.1f с</string>
+    <string name="offline_round_format">Раунд %1$d</string>
+    <string name="offline_score_format">Счёт: %1$d — %2$d</string>
+    <string name="offline_round_result_format">Раунд: %1$s</string>
+    <string name="offline_match_result_format">Матч: %1$s</string>
+    <string name="offline_detection_processing">Распознаём...</string>
+    <string name="offline_detection_error">Ошибка распознавания</string>
+    <string name="offline_detection_hint">Покажите жест перед камерой</string>
+    <string name="offline_detection_unknown">Жест не распознан</string>
+    <string name="offline_permission_required">Нужно разрешение камеры для распознавания жестов</string>
 </resources>
