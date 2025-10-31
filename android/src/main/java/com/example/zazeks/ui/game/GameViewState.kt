@@ -25,9 +25,14 @@ sealed class ViewState {
 @Parcelize
 data class GameUiModel(
     val sessionId: String,
-    val boardRows: List<String>,
-    val currentPlayer: String,
-    val turnCount: Int,
-    val isCompleted: Boolean,
-    val winner: String?
+    val round: Int,
+    val playerGesture: String?,
+    val opponentGesture: String?,
+    val remainingSeconds: Double,
+    val playerScore: Int,
+    val opponentScore: Int,
+    val roundResult: String?,
+    val matchResult: String?,
+    val isRoundCompleted: Boolean,
+    val isMatchCompleted: Boolean
 ) : Parcelable

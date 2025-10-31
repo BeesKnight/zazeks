@@ -11,9 +11,11 @@ import com.example.zazeks.domain.game.GameStateRepository
 import com.example.zazeks.domain.game.GetActiveGameSnapshotUseCase
 import com.example.zazeks.domain.game.GetLastCompletedGameUseCase
 import com.example.zazeks.domain.game.ObserveGameStateUseCase
-import com.example.zazeks.domain.game.PlayMoveUseCase
+import com.example.zazeks.domain.game.ConfirmRoundResultUseCase
 import com.example.zazeks.domain.game.ResumeGameUseCase
+import com.example.zazeks.domain.game.RestartRoundUseCase
 import com.example.zazeks.domain.game.StartNewGameUseCase
+import com.example.zazeks.domain.game.SubmitGestureUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -57,7 +59,13 @@ object GameModule {
     fun provideResumeGameUseCase(engine: GameEngine) = ResumeGameUseCase(engine)
 
     @Provides
-    fun providePlayMoveUseCase(engine: GameEngine) = PlayMoveUseCase(engine)
+    fun provideSubmitGestureUseCase(engine: GameEngine) = SubmitGestureUseCase(engine)
+
+    @Provides
+    fun provideRestartRoundUseCase(engine: GameEngine) = RestartRoundUseCase(engine)
+
+    @Provides
+    fun provideConfirmRoundResultUseCase(engine: GameEngine) = ConfirmRoundResultUseCase(engine)
 
     @Provides
     fun provideAbandonGameUseCase(engine: GameEngine) = AbandonGameUseCase(engine)

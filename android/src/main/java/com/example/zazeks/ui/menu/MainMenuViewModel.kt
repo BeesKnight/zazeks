@@ -27,13 +27,13 @@ class MainMenuViewModel @Inject constructor(
         viewModelScope.launch {
             val active = getActiveGameSnapshot()
             val lastCompleted = getLastCompletedGame()
-            val canResume = active != null && !active.isCompleted
-            val winner = lastCompleted?.winner
-            val hasCompletedGame = lastCompleted?.isCompleted == true
+            val canResume = active != null && active.isMatchCompleted.not()
+            val lastMatchResult = lastCompleted?.matchResult
+            val hasCompletedGame = lastCompleted?.isMatchCompleted == true
             mutableState.postValue(
                 MainMenuViewState(
                     canResume = canResume,
-                    lastWinner = winner,
+                    lastMatchResult = lastMatchResult,
                     hasCompletedGame = hasCompletedGame
                 )
             )
@@ -43,6 +43,6 @@ class MainMenuViewModel @Inject constructor(
 
 data class MainMenuViewState(
     val canResume: Boolean = false,
-    val lastWinner: String? = null,
+    val lastMatchResult: String? = null,
     val hasCompletedGame: Boolean = false
 )
