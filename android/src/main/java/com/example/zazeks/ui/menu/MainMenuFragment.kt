@@ -46,14 +46,12 @@ class MainMenuFragment : Fragment() {
 
         viewModel.state.observe(viewLifecycleOwner) { state ->
             val subtitle = when {
-                state.lastWinner != null -> {
-                    val winnerText = getString(R.string.game_winner_format, state.lastWinner)
-                    getString(R.string.menu_last_result_format, winnerText)
-                }
-                state.hasCompletedGame -> {
-                    val drawText = getString(R.string.game_draw)
-                    getString(R.string.menu_last_result_format, drawText)
-                }
+                state.lastMatchResult != null ->
+                    getString(R.string.menu_last_result_format, formatOutcome(state.lastMatchResult))
+                state.hasCompletedGame -> getString(
+                    R.string.menu_last_result_format,
+                    getString(R.string.game_match_in_progress)
+                )
                 else -> getString(R.string.menu_last_result_placeholder)
             }
             binding.menuSubtitle.text = subtitle
@@ -74,5 +72,12 @@ class MainMenuFragment : Fragment() {
     companion object {
         const val ARG_START_NEW_GAME = "start_new_game"
         const val ARG_RESUME_GAME = "resume_game"
+    }
+
+    private fun formatOutcome(code: String): String = when (code.lowercase()) {
+        "win" -> getString(R.string.game_result_win)
+        "loss" -> getString(R.string.game_result_loss)
+        "draw" -> getString(R.string.game_result_draw)
+        else -> code
     }
 }

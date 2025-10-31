@@ -7,7 +7,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -46,6 +45,7 @@ class SharedPreferencesGameStateRepository @Inject constructor(
             try {
                 GameSnapshotJsonAdapter.fromJson(value)
             } catch (exception: JSONException) {
+                sharedPreferences.edit().remove(key).apply()
                 null
             }
         }
@@ -54,30 +54,37 @@ class SharedPreferencesGameStateRepository @Inject constructor(
     private fun GameSnapshot.toJson(): String {
         val json = JSONObject()
         json.put(FIELD_SESSION_ID, sessionId)
-        json.put(FIELD_CURRENT_PLAYER, currentPlayer)
-        json.put(FIELD_TURN, turn)
-        json.put(FIELD_COMPLETED, isCompleted)
-        json.put(FIELD_WINNER, winner)
-        val boardArray = JSONArray()
-        board.forEach { boardArray.put(it) }
-        json.put(FIELD_BOARD, boardArray)
+        json.put(FIELD_ROUND, round)
+        json.put(FIELD_PLAYER_GESTURE, playerGesture)
+        json.put(FIELD_OPPONENT_GESTURE, opponentGesture)
+        json.put(FIELD_REMAINING_MILLIS, remainingMillis)
+        json.put(FIELD_PLAYER_SCORE, playerScore)
+        json.put(FIELD_OPPONENT_SCORE, opponentScore)
+        json.put(FIELD_ROUND_RESULT, roundResult)
+        json.put(FIELD_MATCH_RESULT, matchResult)
+        json.put(FIELD_ROUND_COMPLETED, isRoundCompleted)
+        json.put(FIELD_MATCH_COMPLETED, isMatchCompleted)
         return json.toString()
     }
 
     private object GameSnapshotJsonAdapter {
         fun fromJson(json: String): GameSnapshot {
             val jsonObject = JSONObject(json)
-            val boardArray = jsonObject.getJSONArray(FIELD_BOARD)
-            val length = boardArray.length()
-            val boardRows = MutableList(length) { index -> boardArray.getString(index) }
-            val winner = if (jsonObject.isNull(FIELD_WINNER)) null else jsonObject.getString(FIELD_WINNER)
+            if (jsonObject.has(FIELD_BOARD)) {
+                throw JSONException("Legacy snapshot schema detected")
+            }
             return GameSnapshot(
                 sessionId = jsonObject.getString(FIELD_SESSION_ID),
-                board = boardRows,
-                currentPlayer = jsonObject.getString(FIELD_CURRENT_PLAYER),
-                turn = jsonObject.getInt(FIELD_TURN),
-                isCompleted = jsonObject.getBoolean(FIELD_COMPLETED),
-                winner = winner
+                round = jsonObject.getInt(FIELD_ROUND),
+                playerGesture = if (jsonObject.isNull(FIELD_PLAYER_GESTURE)) null else jsonObject.getString(FIELD_PLAYER_GESTURE),
+                opponentGesture = if (jsonObject.isNull(FIELD_OPPONENT_GESTURE)) null else jsonObject.getString(FIELD_OPPONENT_GESTURE),
+                remainingMillis = jsonObject.optLong(FIELD_REMAINING_MILLIS, 0L),
+                playerScore = jsonObject.optInt(FIELD_PLAYER_SCORE, 0),
+                opponentScore = jsonObject.optInt(FIELD_OPPONENT_SCORE, 0),
+                roundResult = if (jsonObject.isNull(FIELD_ROUND_RESULT)) null else jsonObject.getString(FIELD_ROUND_RESULT),
+                matchResult = if (jsonObject.isNull(FIELD_MATCH_RESULT)) null else jsonObject.getString(FIELD_MATCH_RESULT),
+                isRoundCompleted = jsonObject.optBoolean(FIELD_ROUND_COMPLETED, false),
+                isMatchCompleted = jsonObject.optBoolean(FIELD_MATCH_COMPLETED, false)
             )
         }
     }
@@ -86,10 +93,15 @@ class SharedPreferencesGameStateRepository @Inject constructor(
         private const val KEY_ACTIVE_GAME = "active_game"
         private const val KEY_LAST_COMPLETED_GAME = "last_completed_game"
         private const val FIELD_SESSION_ID = "sessionId"
-        private const val FIELD_BOARD = "board"
-        private const val FIELD_CURRENT_PLAYER = "currentPlayer"
-        private const val FIELD_TURN = "turn"
-        private const val FIELD_COMPLETED = "completed"
-        private const val FIELD_WINNER = "winner"
+        private const val FIELD_ROUND = "round"
+        private const val FIELD_PLAYER_GESTURE = "playerGesture"
+        private const val FIELD_OPPONENT_GESTURE = "opponentGesture"
+        private const val FIELD_REMAINING_MILLIS = "remainingMillis"
+        private const val FIELD_PLAYER_SCORE = "playerScore"
+        private const val FIELD_OPPONENT_SCORE = "opponentScore"
+        private const val FIELD_ROUND_RESULT = "roundResult"
+        private const val FIELD_MATCH_RESULT = "matchResult"
+        private const val FIELD_ROUND_COMPLETED = "roundCompleted"
+        private const val FIELD_MATCH_COMPLETED = "matchCompleted"
     }
 }

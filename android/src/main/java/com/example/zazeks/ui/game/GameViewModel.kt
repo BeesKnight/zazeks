@@ -9,10 +9,12 @@ import com.example.zazeks.domain.game.GameError
 import com.example.zazeks.domain.game.GameResult
 import com.example.zazeks.domain.game.GameSnapshot
 import com.example.zazeks.domain.game.ObserveGameStateUseCase
-import com.example.zazeks.domain.game.PlayMoveUseCase
+import com.example.zazeks.domain.game.ConfirmRoundResultUseCase
 import com.example.zazeks.domain.game.ResumeGameUseCase
 import com.example.zazeks.domain.game.StartNewGameUseCase
 import com.example.zazeks.domain.game.AbandonGameUseCase
+import com.example.zazeks.domain.game.RestartRoundUseCase
+import com.example.zazeks.domain.game.SubmitGestureUseCase
 import com.example.zazeks.ui.common.Event
 import com.example.zazeks.ui.game.GameEffect.NavigateToMenu
 import com.example.zazeks.ui.game.GameResultArgs
@@ -29,7 +31,9 @@ class GameViewModel @Inject constructor(
     private val observeGameStateUseCase: ObserveGameStateUseCase,
     private val startNewGameUseCase: StartNewGameUseCase,
     private val resumeGameUseCase: ResumeGameUseCase,
-    private val playMoveUseCase: PlayMoveUseCase,
+    private val submitGestureUseCase: SubmitGestureUseCase,
+    private val restartRoundUseCase: RestartRoundUseCase,
+    private val confirmRoundResultUseCase: ConfirmRoundResultUseCase,
     private val abandonGameUseCase: AbandonGameUseCase,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -37,7 +41,9 @@ class GameViewModel @Inject constructor(
     private val mutableState = MutableLiveData<ViewState>()
     private val mutableEffects = MutableLiveData<Event<GameEffect>>()
     private var observationJob: Job? = null
-    private var latestContent: GameUiModel? = savedStateHandle.get(SAVED_STATE_KEY)
+    private var latestContent: GameUiModel? = runCatching {
+        savedStateHandle.get<GameUiModel>(SAVED_STATE_KEY)
+    }.getOrNull()
     private var lastError: GameError? = null
     private var completionSignature: String? = null
 
@@ -74,9 +80,21 @@ class GameViewModel @Inject constructor(
         }
     }
 
-    fun onCellSelected(row: Int, column: Int) {
+    fun onGestureSelected(gesture: String) {
         viewModelScope.launch {
-            handleResult(playMoveUseCase(row, column))
+            handleResult(submitGestureUseCase(gesture))
+        }
+    }
+
+    fun onRestartRound() {
+        viewModelScope.launch {
+            handleResult(restartRoundUseCase())
+        }
+    }
+
+    fun onConfirmRoundResult() {
+        viewModelScope.launch {
+            handleResult(confirmRoundResultUseCase())
         }
     }
 
@@ -119,15 +137,15 @@ class GameViewModel @Inject constructor(
         latestContent = uiModel
         savedStateHandle[SAVED_STATE_KEY] = uiModel
         mutableState.postValue(ViewState.Content(uiModel))
-        if (snapshot.isCompleted) {
-            emitCompletionIfNeeded(snapshot, uiModel)
+        if (snapshot.isMatchCompleted) {
+            emitCompletionIfNeeded(snapshot)
         } else {
             completionSignature = null
         }
     }
 
-    private fun emitCompletionIfNeeded(snapshot: GameSnapshot, uiModel: GameUiModel) {
-        val signature = "${snapshot.sessionId}:${snapshot.turn}"
+    private fun emitCompletionIfNeeded(snapshot: GameSnapshot) {
+        val signature = "${snapshot.sessionId}:${snapshot.matchResult}:${snapshot.round}"
         if (signature != completionSignature) {
             completionSignature = signature
             mutableEffects.postValue(
@@ -135,9 +153,12 @@ class GameViewModel @Inject constructor(
                     GameEffect.NavigateToResults(
                         GameResultArgs(
                             sessionId = snapshot.sessionId,
-                            winner = snapshot.winner,
-                            turnCount = snapshot.turn,
-                            boardRows = uiModel.boardRows
+                            playerGesture = snapshot.playerGesture,
+                            opponentGesture = snapshot.opponentGesture,
+                            playerScore = snapshot.playerScore,
+                            opponentScore = snapshot.opponentScore,
+                            roundCount = snapshot.round,
+                            matchResult = snapshot.matchResult
                         )
                     )
                 )
@@ -148,11 +169,16 @@ class GameViewModel @Inject constructor(
     private fun GameSnapshot.toUiModel(): GameUiModel {
         return GameUiModel(
             sessionId = sessionId,
-            boardRows = board,
-            currentPlayer = currentPlayer,
-            turnCount = turn,
-            isCompleted = isCompleted,
-            winner = winner
+            round = round,
+            playerGesture = playerGesture,
+            opponentGesture = opponentGesture,
+            remainingSeconds = remainingMillis / 1000.0,
+            playerScore = playerScore,
+            opponentScore = opponentScore,
+            roundResult = roundResult,
+            matchResult = matchResult,
+            isRoundCompleted = isRoundCompleted,
+            isMatchCompleted = isMatchCompleted
         )
     }
 
@@ -160,12 +186,12 @@ class GameViewModel @Inject constructor(
         lastError = error
         return when (error) {
             is GameError.InvalidMove -> ViewState.Error(
-                title = "Недопустимый ход",
+                title = "Неверное действие",
                 message = error.reason,
                 isRecoverable = true,
                 action = ViewState.Error.Action(
-                    label = "Изменить ход",
-                    analyticsTag = "retry_invalid_move"
+                    label = "Попробовать снова",
+                    analyticsTag = "retry_invalid_action"
                 )
             )
             is GameError.SessionExpired -> {

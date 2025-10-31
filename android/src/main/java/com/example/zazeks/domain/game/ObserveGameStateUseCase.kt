@@ -18,6 +18,8 @@ interface GameEngine {
     fun observeGame(): Flow<GameResult<GameSnapshot>>
     suspend fun startNewGame(): GameResult<GameSnapshot>
     suspend fun resumeLastGame(): GameResult<GameSnapshot>
-    suspend fun playMove(row: Int, column: Int): GameResult<GameSnapshot>
+    suspend fun submitGesture(gesture: String): GameResult<GameSnapshot>
+    suspend fun restartRound(): GameResult<GameSnapshot>
+    suspend fun confirmResult(): GameResult<GameSnapshot>
     suspend fun abandonGame()
 }

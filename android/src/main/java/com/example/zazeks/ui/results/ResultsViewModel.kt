@@ -30,19 +30,26 @@ class ResultsViewModel @Inject constructor(
 
     private fun GameResultArgs.toSnapshot(): GameSnapshot = GameSnapshot(
         sessionId = sessionId,
-        board = boardRows,
-        currentPlayer = "",
-        turn = turnCount,
-        isCompleted = true,
-        winner = winner
+        round = roundCount,
+        playerGesture = playerGesture,
+        opponentGesture = opponentGesture,
+        remainingMillis = 0L,
+        playerScore = playerScore,
+        opponentScore = opponentScore,
+        roundResult = null,
+        matchResult = matchResult,
+        isRoundCompleted = true,
+        isMatchCompleted = true
     )
 
     private fun GameSnapshot.toViewState(): ResultsViewState = ResultsViewState.Content(
         sessionId = sessionId,
-        turnCount = turn,
-        winner = winner,
-        isDraw = winner == null,
-        boardRows = board
+        roundsPlayed = round,
+        playerGesture = playerGesture,
+        opponentGesture = opponentGesture,
+        playerScore = playerScore,
+        opponentScore = opponentScore,
+        matchResult = matchResult
     )
 }
 
@@ -50,9 +57,11 @@ sealed class ResultsViewState {
     object Empty : ResultsViewState()
     data class Content(
         val sessionId: String,
-        val turnCount: Int,
-        val winner: String?,
-        val isDraw: Boolean,
-        val boardRows: List<String>
+        val roundsPlayed: Int,
+        val playerGesture: String?,
+        val opponentGesture: String?,
+        val playerScore: Int,
+        val opponentScore: Int,
+        val matchResult: String?
     ) : ResultsViewState()
 }

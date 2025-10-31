@@ -11,7 +11,10 @@ sealed class GameEffect {
 @Parcelize
 data class GameResultArgs(
     val sessionId: String,
-    val winner: String?,
-    val turnCount: Int,
-    val boardRows: List<String>
+    val playerGesture: String?,
+    val opponentGesture: String?,
+    val playerScore: Int,
+    val opponentScore: Int,
+    val roundCount: Int,
+    val matchResult: String?
 ) : Parcelable

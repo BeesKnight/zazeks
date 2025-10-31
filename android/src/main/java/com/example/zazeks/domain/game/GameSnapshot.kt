@@ -5,9 +5,14 @@ package com.example.zazeks.domain.game
  */
 data class GameSnapshot(
     val sessionId: String,
-    val board: List<String>,
-    val currentPlayer: String,
-    val turn: Int,
-    val isCompleted: Boolean,
-    val winner: String?
+    val round: Int,
+    val playerGesture: String?,
+    val opponentGesture: String?,
+    val remainingMillis: Long,
+    val playerScore: Int,
+    val opponentScore: Int,
+    val roundResult: String?,
+    val matchResult: String?,
+    val isRoundCompleted: Boolean,
+    val isMatchCompleted: Boolean
 )

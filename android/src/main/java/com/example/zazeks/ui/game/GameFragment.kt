@@ -12,9 +12,7 @@ import com.example.zazeks.R
 import com.example.zazeks.databinding.FragmentGameBinding
 import com.example.zazeks.ui.common.Event
 import com.example.zazeks.ui.menu.MainMenuFragment
-import com.google.android.material.button.MaterialButton
 import dagger.hilt.android.AndroidEntryPoint
-import androidx.gridlayout.widget.GridLayout
 
 @AndroidEntryPoint
 class GameFragment : Fragment() {
@@ -37,6 +35,11 @@ class GameFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.errorActionButton.setOnClickListener { viewModel.onErrorAction() }
         binding.quitButton.setOnClickListener { viewModel.onQuitToMenu() }
+        binding.rockButton.setOnClickListener { viewModel.onGestureSelected("rock") }
+        binding.paperButton.setOnClickListener { viewModel.onGestureSelected("paper") }
+        binding.scissorsButton.setOnClickListener { viewModel.onGestureSelected("scissors") }
+        binding.restartRoundButton.setOnClickListener { viewModel.onRestartRound() }
+        binding.confirmRoundButton.setOnClickListener { viewModel.onConfirmRoundResult() }
 
         viewModel.observeGameState().observe(viewLifecycleOwner, ::renderState)
         viewModel.effects().observe(viewLifecycleOwner, ::handleEffect)
@@ -74,49 +77,56 @@ class GameFragment : Fragment() {
 
     private fun renderContent(model: GameUiModel) {
         binding.sessionId.text = getString(R.string.game_session_format, model.sessionId)
-        binding.currentPlayer.text = getString(R.string.game_current_player, model.currentPlayer)
-        binding.turnLabel.text = getString(R.string.game_turn, model.turnCount)
+        binding.roundLabel.text = getString(R.string.game_round_label, model.round)
+        binding.timerLabel.text = getString(R.string.game_timer_label, model.remainingSeconds)
+        binding.scoreLabel.text = getString(R.string.game_score_label, model.playerScore, model.opponentScore)
+        binding.playerGestureLabel.text = getString(
+            R.string.game_player_gesture,
+            formatGesture(model.playerGesture)
+        )
+        binding.opponentGestureLabel.text = getString(
+            R.string.game_opponent_gesture,
+            formatGesture(model.opponentGesture)
+        )
 
-        binding.completionLabel.isVisible = model.isCompleted
-        binding.completionLabel.text = if (model.isCompleted) {
-            getString(R.string.game_completion)
+        val roundResult = model.roundResult
+        binding.roundResultLabel.isVisible = !roundResult.isNullOrBlank()
+        binding.roundResultLabel.text = roundResult?.let {
+            getString(R.string.game_round_result_label, formatOutcome(it))
+        }
+
+        binding.matchResultLabel.isVisible = model.isMatchCompleted
+        binding.matchResultLabel.text = if (model.isMatchCompleted) {
+            model.matchResult?.let { result ->
+                getString(R.string.game_match_result_label, formatOutcome(result))
+            }
+                ?: getString(R.string.game_match_in_progress)
         } else {
             null
         }
-        binding.winnerLabel.isVisible = model.isCompleted
-        binding.winnerLabel.text = when {
-            model.winner != null -> getString(R.string.game_winner_format, model.winner)
-            model.isCompleted -> getString(R.string.game_draw)
-            else -> null
-        }
 
-        renderBoard(model)
+        val canPlay = !model.isRoundCompleted && !model.isMatchCompleted
+        binding.rockButton.isEnabled = canPlay
+        binding.paperButton.isEnabled = canPlay
+        binding.scissorsButton.isEnabled = canPlay
+        binding.gestureButtonsContainer.isVisible = !model.isMatchCompleted
+        binding.restartRoundButton.isEnabled = !model.isMatchCompleted
+        binding.confirmRoundButton.isEnabled = model.isRoundCompleted
     }
 
-    private fun renderBoard(model: GameUiModel) {
-        val grid = binding.boardGrid
-        grid.removeAllViews()
-        grid.columnCount = model.boardRows.firstOrNull()?.length ?: 0
-        grid.rowCount = model.boardRows.size
-        if (grid.columnCount == 0 || grid.rowCount == 0) {
-            return
-        }
-        model.boardRows.forEachIndexed { rowIndex, row ->
-            row.forEachIndexed { columnIndex, cell ->
-                val button = MaterialButton(requireContext()).apply {
-                    text = cell.takeIf { it != ' ' }?.toString() ?: ""
-                    isEnabled = !model.isCompleted && cell == ' '
-                    layoutParams = GridLayout.LayoutParams().apply {
-                        width = 0
-                        height = ViewGroup.LayoutParams.WRAP_CONTENT
-                        columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
-                        rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
-                    }
-                    setOnClickListener { viewModel.onCellSelected(rowIndex, columnIndex) }
-                }
-                grid.addView(button)
-            }
-        }
+    private fun formatGesture(value: String?): String = when (value?.lowercase()) {
+        "rock" -> getString(R.string.game_select_rock)
+        "paper" -> getString(R.string.game_select_paper)
+        "scissors" -> getString(R.string.game_select_scissors)
+        null -> getString(R.string.game_gesture_unknown)
+        else -> value
+    }
+
+    private fun formatOutcome(code: String?): String = when (code?.lowercase()) {
+        "win" -> getString(R.string.game_result_win)
+        "loss" -> getString(R.string.game_result_loss)
+        "draw" -> getString(R.string.game_result_draw)
+        else -> code ?: getString(R.string.game_gesture_unknown)
     }
 
     private fun handleEffect(event: Event<GameEffect>) {

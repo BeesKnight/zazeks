@@ -7,14 +7,12 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.gridlayout.widget.GridLayout
 import androidx.navigation.fragment.findNavController
 import com.example.zazeks.R
 import com.example.zazeks.databinding.FragmentResultsBinding
 import com.example.zazeks.ui.game.GameFragment
 import com.example.zazeks.ui.game.GameResultArgs
 import com.example.zazeks.ui.menu.MainMenuFragment
-import com.google.android.material.button.MaterialButton
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -67,38 +65,38 @@ class ResultsFragment : Fragment() {
         binding.resultsCard.isVisible = true
         binding.emptyState.isVisible = false
         binding.sessionLabel.text = getString(R.string.results_session_label, content.sessionId)
-        binding.turnsLabel.text = getString(R.string.results_turns_label, content.turnCount)
-        binding.winnerLabel.text = if (content.isDraw) {
-            getString(R.string.results_draw_label)
-        } else {
-            getString(R.string.results_winner_label, content.winner)
-        }
-        renderBoard(content.boardRows)
+        binding.roundsLabel.text = getString(R.string.results_rounds_label, content.roundsPlayed)
+        binding.scoreLabel.text = getString(
+            R.string.results_score_label,
+            content.playerScore,
+            content.opponentScore
+        )
+        binding.playerGestureLabel.text = getString(
+            R.string.results_player_gesture_label,
+            formatGesture(content.playerGesture)
+        )
+        binding.opponentGestureLabel.text = getString(
+            R.string.results_opponent_gesture_label,
+            formatGesture(content.opponentGesture)
+        )
+        binding.matchResultLabel.text = content.matchResult?.let {
+            getString(R.string.results_match_result_label, formatOutcome(it))
+        } ?: getString(R.string.results_match_result_pending)
     }
 
-    private fun renderBoard(boardRows: List<String>) {
-        val grid = binding.resultsBoard
-        grid.removeAllViews()
-        grid.columnCount = boardRows.firstOrNull()?.length ?: 0
-        grid.rowCount = boardRows.size
-        if (grid.columnCount == 0 || grid.rowCount == 0) {
-            return
-        }
-        boardRows.forEach { row ->
-            row.forEach { cell ->
-                val button = MaterialButton(requireContext()).apply {
-                    isEnabled = false
-                    text = cell.takeIf { it != ' ' }?.toString() ?: ""
-                    layoutParams = GridLayout.LayoutParams().apply {
-                        width = 0
-                        height = ViewGroup.LayoutParams.WRAP_CONTENT
-                        columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
-                        rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
-                    }
-                }
-                grid.addView(button)
-            }
-        }
+    private fun formatGesture(value: String?): String = when (value?.lowercase()) {
+        "rock" -> getString(R.string.game_select_rock)
+        "paper" -> getString(R.string.game_select_paper)
+        "scissors" -> getString(R.string.game_select_scissors)
+        null -> getString(R.string.results_gesture_unknown)
+        else -> value
+    }
+
+    private fun formatOutcome(code: String?): String = when (code?.lowercase()) {
+        "win" -> getString(R.string.game_result_win)
+        "loss" -> getString(R.string.game_result_loss)
+        "draw" -> getString(R.string.game_result_draw)
+        else -> code ?: getString(R.string.results_gesture_unknown)
     }
 
     override fun onDestroyView() {
