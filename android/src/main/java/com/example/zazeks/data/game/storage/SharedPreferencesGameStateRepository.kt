@@ -103,5 +103,6 @@ class SharedPreferencesGameStateRepository @Inject constructor(
         private const val FIELD_MATCH_RESULT = "matchResult"
         private const val FIELD_ROUND_COMPLETED = "roundCompleted"
         private const val FIELD_MATCH_COMPLETED = "matchCompleted"
+        private const val FIELD_BOARD = "board"
     }
 }
