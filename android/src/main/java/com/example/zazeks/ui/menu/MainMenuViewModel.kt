@@ -12,6 +12,8 @@ import com.example.zazeks.domain.game.GetLastCompletedGameUseCase
 import com.example.zazeks.domain.results.GetUserGameRoundsUseCase
 import com.example.zazeks.domain.results.ResultMode
 import com.example.zazeks.domain.results.RoundResult
+import com.example.zazeks.domain.user.GetUserProfileUseCase
+import com.example.zazeks.domain.user.UserProfile
 import com.example.zazeks.infra.auth.AuthTokenStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -22,6 +24,7 @@ class MainMenuViewModel @Inject constructor(
     private val getActiveGameSnapshot: GetActiveGameSnapshotUseCase,
     private val getLastCompletedGame: GetLastCompletedGameUseCase,
     private val getUserGameRounds: GetUserGameRoundsUseCase,
+    private val getUserProfile: GetUserProfileUseCase,
     private val authTokenStorage: AuthTokenStorage,
 ) : ViewModel() {
 
@@ -50,8 +53,13 @@ class MainMenuViewModel @Inject constructor(
                     )
             } ?: (emptyList<RoundResult>() to null)
 
+            val profile = session?.userId?.let { userId ->
+                runCatching { getUserProfile(userId) }.getOrNull()
+            }
+
             val stateValue = MainMenuViewState(
                 profileUserId = session?.userId,
+                profile = profile,
                 canResume = active?.isMatchCompleted?.not() == true,
                 lastOffline = lastCompleted?.takeIf { it.isMatchCompleted }?.toRoundResult(),
                 topResults = topResults,
@@ -80,6 +88,7 @@ class MainMenuViewModel @Inject constructor(
 
 data class MainMenuViewState(
     val profileUserId: Int? = null,
+    val profile: UserProfile? = null,
     val canResume: Boolean = false,
     val lastOffline: RoundResult? = null,
     val topResults: List<RoundResult> = emptyList(),

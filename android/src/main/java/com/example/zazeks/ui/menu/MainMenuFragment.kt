@@ -4,6 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -16,6 +19,8 @@ import com.example.zazeks.databinding.FragmentMainMenuBinding
 import com.example.zazeks.databinding.ItemMainMenuResultBinding
 import com.example.zazeks.domain.results.ResultMode
 import com.example.zazeks.domain.results.RoundResult
+import com.example.zazeks.ui.common.loadBase64Image
+import com.example.zazeks.ui.profile.ProfileFragment
 import dagger.hilt.android.AndroidEntryPoint
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -65,6 +70,8 @@ class MainMenuFragment : Fragment() {
                 Bundle().apply { putBoolean(ARG_RESUME_GAME, true) }
             )
         }
+        binding.profileCard.setOnClickListener { openProfile() }
+        binding.profileMenuButton.setOnClickListener { openProfile() }
         binding.resultsLink.setOnClickListener {
             findNavController().navigate(R.id.action_mainMenuFragment_to_resultsFragment)
         }
@@ -84,12 +91,26 @@ class MainMenuFragment : Fragment() {
         }
 
         viewModel.state.observe(viewLifecycleOwner, ::renderState)
+        parentFragmentManager.setFragmentResultListener(
+            ProfileFragment.REQUEST_KEY_PROFILE_UPDATED,
+            viewLifecycleOwner
+        ) { _, _ ->
+            viewModel.refresh()
+        }
     }
 
     private fun renderState(state: MainMenuViewState) {
-        binding.profileName.text = formatProfileName(state.profileUserId)
-        binding.profileSubtitle.text = formatProfileSubtitle(state.profileUserId)
+        binding.profileName.text = formatProfileName(state)
+        binding.profileSubtitle.text = formatProfileSubtitle(state)
         binding.profileAvatar.contentDescription = binding.profileName.text
+        val placeholder = ContextCompat.getDrawable(requireContext(), android.R.drawable.ic_menu_myplaces)
+        binding.profileAvatar.loadBase64Image(state.profile?.photo, placeholder)
+        val hasProfile = state.profileUserId != null
+        binding.profileCard.isEnabled = hasProfile
+        binding.profileCard.isClickable = hasProfile
+        binding.profileCard.alpha = if (hasProfile) 1f else 0.6f
+        binding.profileMenuButton.isEnabled = hasProfile
+        binding.profileMenuButton.alpha = if (hasProfile) 1f else 0.5f
 
         binding.resumeOfflineButton.isVisible = state.canResume
         binding.resumeOfflineButton.isEnabled = state.canResume
@@ -179,13 +200,17 @@ class MainMenuFragment : Fragment() {
         _binding = null
     }
 
-    private fun formatProfileName(userId: Int?): String = userId?.let {
-        getString(R.string.menu_profile_user_format, it)
-    } ?: getString(R.string.menu_profile_guest)
+    private fun formatProfileName(state: MainMenuViewState): String =
+        state.profile?.username
+            ?: state.profileUserId?.let { getString(R.string.menu_profile_user_format, it) }
+            ?: getString(R.string.menu_profile_guest)
 
-    private fun formatProfileSubtitle(userId: Int?): String = userId?.let {
-        getString(R.string.menu_profile_description_user)
-    } ?: getString(R.string.menu_profile_description_guest)
+    private fun formatProfileSubtitle(state: MainMenuViewState): String =
+        if (state.profileUserId != null) {
+            getString(R.string.menu_profile_description_user)
+        } else {
+            getString(R.string.menu_profile_description_guest)
+        }
 
     private fun formatGesture(value: String?): String = when (value?.lowercase()) {
         "rock" -> getString(R.string.game_select_rock)
@@ -210,6 +235,16 @@ class MainMenuFragment : Fragment() {
 
     private fun formatTimestamp(instant: java.time.Instant?): String? = instant?.let {
         timestampFormatter.format(it)
+    }
+
+    private fun openProfile() {
+        val userId = viewModel.state.value?.profile?.id ?: viewModel.state.value?.profileUserId
+        if (userId != null) {
+            val args = bundleOf(ProfileFragment.ARG_USER_ID to userId)
+            findNavController().navigate(R.id.action_mainMenuFragment_to_profileFragment, args)
+        } else {
+            Toast.makeText(requireContext(), R.string.menu_profile_guest, Toast.LENGTH_SHORT).show()
+        }
     }
 
     companion object {
