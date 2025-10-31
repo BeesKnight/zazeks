@@ -1,6 +1,7 @@
 package com.example.zazeks.di
 
 import com.example.zazeks.data.auth.AuthApi
+import com.example.zazeks.data.results.GameResultsApi
 import com.example.zazeks.infra.auth.AuthInterceptor
 import com.example.zazeks.infra.config.BackendConfig
 import dagger.Module
@@ -35,4 +36,9 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideAuthApi(retrofit: Retrofit): AuthApi = retrofit.create(AuthApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideGameResultsApi(retrofit: Retrofit): GameResultsApi =
+        retrofit.create(GameResultsApi::class.java)
 }

@@ -14,83 +14,92 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/resultsCard"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:cardUseCompatPadding="true"
-        app:layout_constraintTop_toBottomOf="@id/resultsTitle"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <TextView
-                android:id="@+id/sessionLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
-
-            <TextView
-                android:id="@+id/roundsLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
-
-            <TextView
-                android:id="@+id/scoreLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
-
-            <TextView
-                android:id="@+id/playerGestureLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
-
-            <TextView
-                android:id="@+id/opponentGestureLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
-
-            <TextView
-                android:id="@+id/matchResultLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-    <TextView
-        android:id="@+id/emptyState"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="@string/results_empty_state"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/resultsTitle"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <LinearLayout
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/filterChipGroup"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/resultsTitle"
+        app:singleSelection="true">
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/filterAllChip"
+            style="@style/Widget.MaterialComponents.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="@string/results_filter_all" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/filterOfflineChip"
+            style="@style/Widget.MaterialComponents.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/results_filter_offline" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/filterOnlineChip"
+            style="@style/Widget.MaterialComponents.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/results_filter_online" />
+    </com.google.android.material.chip.ChipGroup>
+
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/resultsProgress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/buttonsContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/filterChipGroup" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/resultsList"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@id/buttonsContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/filterChipGroup" />
+
+    <TextView
+        android:id="@+id/resultsEmpty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/results_empty_list"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/buttonsContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/filterChipGroup" />
+
+    <TextView
+        android:id="@+id/resultsError"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+        android:textColor="@android:color/holo_red_dark"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/buttonsContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/filterChipGroup" />
+
+    <LinearLayout
+        android:id="@+id/buttonsContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:orientation="horizontal"
-        app:layout_constraintTop_toBottomOf="@id/resultsCard"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
         <com.google.android.material.button.MaterialButton
@@ -108,5 +117,4 @@
             android:layout_marginStart="16dp"
             android:text="@string/results_back_to_menu" />
     </LinearLayout>
-
 </androidx.constraintlayout.widget.ConstraintLayout>

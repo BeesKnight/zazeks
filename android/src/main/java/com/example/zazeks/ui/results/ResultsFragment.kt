@@ -8,12 +8,16 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.zazeks.R
 import com.example.zazeks.databinding.FragmentResultsBinding
-import com.example.zazeks.ui.offline.OfflineMatchFragment
 import com.example.zazeks.ui.offline.GameResultArgs
+import com.example.zazeks.ui.offline.OfflineMatchFragment
 import com.example.zazeks.ui.menu.MainMenuFragment
 import dagger.hilt.android.AndroidEntryPoint
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @AndroidEntryPoint
 class ResultsFragment : Fragment() {
@@ -22,11 +26,19 @@ class ResultsFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: ResultsViewModel by viewModels()
+    private lateinit var adapter: RoundResultsAdapter
+
+    private val timestampFormatter by lazy {
+        DateTimeFormatter.ofPattern("dd MMM HH:mm", Locale.getDefault())
+            .withZone(ZoneId.systemDefault())
+    }
+
+    private var suppressFilterCallback = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         _binding = FragmentResultsBinding.inflate(inflater, container, false)
         return binding.root
@@ -42,6 +54,16 @@ class ResultsFragment : Fragment() {
             findNavController().navigate(R.id.action_resultsFragment_to_offlineMatchFragment, args)
         }
 
+        adapter = RoundResultsAdapter(timestampFormatter)
+        binding.resultsList.layoutManager = LinearLayoutManager(requireContext())
+        binding.resultsList.adapter = adapter
+
+        binding.filterChipGroup.setOnCheckedStateChangeListener { _, checkedIds ->
+            if (suppressFilterCallback) return@setOnCheckedStateChangeListener
+            val checkedId = checkedIds.firstOrNull() ?: return@setOnCheckedStateChangeListener
+            filterFromChipId(checkedId)?.let { viewModel.onFilterSelected(it) }
+        }
+
         val args = arguments?.getParcelable<GameResultArgs>(OfflineMatchFragment.ARG_GAME_RESULT)
         arguments?.remove(OfflineMatchFragment.ARG_GAME_RESULT)
         viewModel.load(args)
@@ -50,57 +72,39 @@ class ResultsFragment : Fragment() {
     }
 
     private fun renderState(state: ResultsViewState) {
-        when (state) {
-            ResultsViewState.Empty -> showEmptyState()
-            is ResultsViewState.Content -> showContent(state)
+        val chipId = chipIdForFilter(state.filter)
+        if (chipId != null && binding.filterChipGroup.checkedChipId != chipId) {
+            suppressFilterCallback = true
+            binding.filterChipGroup.check(chipId)
+            suppressFilterCallback = false
         }
-    }
 
-    private fun showEmptyState() {
-        binding.resultsCard.isVisible = false
-        binding.emptyState.isVisible = true
-    }
+        binding.resultsProgress.isVisible = state.isLoading
+        binding.resultsError.isVisible = state.errorMessageRes != null
+        binding.resultsError.text = state.errorMessageRes?.let { getString(it) }
 
-    private fun showContent(content: ResultsViewState.Content) {
-        binding.resultsCard.isVisible = true
-        binding.emptyState.isVisible = false
-        binding.sessionLabel.text = getString(R.string.results_session_label, content.sessionId)
-        binding.roundsLabel.text = getString(R.string.results_rounds_label, content.roundsPlayed)
-        binding.scoreLabel.text = getString(
-            R.string.results_score_label,
-            content.playerScore,
-            content.opponentScore
-        )
-        binding.playerGestureLabel.text = getString(
-            R.string.results_player_gesture_label,
-            formatGesture(content.playerGesture)
-        )
-        binding.opponentGestureLabel.text = getString(
-            R.string.results_opponent_gesture_label,
-            formatGesture(content.opponentGesture)
-        )
-        binding.matchResultLabel.text = content.matchResult?.let {
-            getString(R.string.results_match_result_label, formatOutcome(it))
-        } ?: getString(R.string.results_match_result_pending)
-    }
+        adapter.submitList(state.visibleItems)
+        binding.resultsList.isVisible = state.visibleItems.isNotEmpty()
 
-    private fun formatGesture(value: String?): String = when (value?.lowercase()) {
-        "rock" -> getString(R.string.game_select_rock)
-        "paper" -> getString(R.string.game_select_paper)
-        "scissors" -> getString(R.string.game_select_scissors)
-        null -> getString(R.string.results_gesture_unknown)
-        else -> value
-    }
-
-    private fun formatOutcome(code: String?): String = when (code?.lowercase()) {
-        "win" -> getString(R.string.game_result_win)
-        "loss" -> getString(R.string.game_result_loss)
-        "draw" -> getString(R.string.game_result_draw)
-        else -> code ?: getString(R.string.results_gesture_unknown)
+        val showEmpty = state.visibleItems.isEmpty() && !state.isLoading && state.errorMessageRes == null
+        binding.resultsEmpty.isVisible = showEmpty
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun chipIdForFilter(filter: ResultFilter): Int? = when (filter) {
+        ResultFilter.ALL -> R.id.filterAllChip
+        ResultFilter.OFFLINE -> R.id.filterOfflineChip
+        ResultFilter.ONLINE -> R.id.filterOnlineChip
+    }
+
+    private fun filterFromChipId(chipId: Int): ResultFilter? = when (chipId) {
+        R.id.filterAllChip -> ResultFilter.ALL
+        R.id.filterOfflineChip -> ResultFilter.OFFLINE
+        R.id.filterOnlineChip -> ResultFilter.ONLINE
+        else -> null
     }
 }

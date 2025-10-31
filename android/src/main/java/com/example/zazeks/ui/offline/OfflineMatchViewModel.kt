@@ -18,6 +18,7 @@ import com.example.zazeks.domain.game.ResumeGameUseCase
 import com.example.zazeks.domain.game.StartNewGameUseCase
 import com.example.zazeks.domain.game.SubmitGestureUseCase
 import com.example.zazeks.infra.ml.GameFrame
+import com.example.zazeks.domain.results.ResultMode
 import com.example.zazeks.infra.ml.NeuralModelBridge
 import com.example.zazeks.ui.common.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -276,7 +277,8 @@ class OfflineMatchViewModel @Inject constructor(
                             playerScore = snapshot.playerScore,
                             opponentScore = snapshot.opponentScore,
                             roundCount = snapshot.round,
-                            matchResult = snapshot.matchResult
+                            matchResult = snapshot.matchResult,
+                            mode = ResultMode.OFFLINE.name
                         )
                     )
                 )

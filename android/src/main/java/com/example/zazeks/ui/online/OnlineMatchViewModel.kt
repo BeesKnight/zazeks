@@ -9,6 +9,7 @@ import com.example.zazeks.data.multiplayer.MultiplayerStatsRepository
 import com.example.zazeks.data.multiplayer.OnlineMatchEvent
 import com.example.zazeks.data.multiplayer.OnlineMatchRepository
 import com.example.zazeks.di.IoDispatcher
+import com.example.zazeks.domain.results.ResultMode
 import com.example.zazeks.infra.ml.GameFrame
 import com.example.zazeks.infra.ml.NeuralModelBridge
 import com.example.zazeks.ui.common.Event
@@ -230,6 +231,7 @@ class OnlineMatchViewModel @Inject constructor(
                 opponentScore = event.opponentScore,
                 roundCount = event.round,
                 matchResult = event.result,
+                mode = ResultMode.ONLINE.name,
             )
             lastResult = args
             viewModelScope.launch {
