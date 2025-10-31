@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.zazeks.core.gestures.normalizeGesture
 import com.example.zazeks.data.multiplayer.BattleResultRequest
 import com.example.zazeks.data.multiplayer.MultiplayerStatsRepository
 import com.example.zazeks.data.multiplayer.OnlineMatchEvent
@@ -105,8 +106,10 @@ class OnlineMatchViewModel @Inject constructor(
             updateDetection(detectionState.copy(isProcessing = true, errorMessage = null, errorMessageRes = null))
             try {
                 val result = withContext(ioDispatcher) { neuralModelBridge.detect(frame) }
-                val gesture = result.gesture.orEmpty().ifBlank { null }
-                gesture?.let { lastValidGesture = it }
+                val gesture = normalizeGesture(result.gesture)
+                if (gesture != null) {
+                    lastValidGesture = gesture
+                }
                 val detection = DetectionUiModel(
                     gesture = gesture ?: detectionState.gesture,
                     isProcessing = false,
@@ -115,7 +118,7 @@ class OnlineMatchViewModel @Inject constructor(
                 )
                 updateDetection(detection)
                 repository.sendGesture(gesture, lastValidGesture)
-                if (!gesture.isNullOrBlank()) {
+                if (gesture != null) {
                     updateSession { it.copy(playerGesture = gesture) }
                 }
             } catch (throwable: Throwable) {
@@ -209,11 +212,13 @@ class OnlineMatchViewModel @Inject constructor(
     private fun handleBattleEnd(event: OnlineMatchEvent.BattleEnd) {
         timerJob?.cancel()
         val sessionId = currentSession.sessionId
+        val playerGesture = normalizeGesture(event.playerGesture)
+        val opponentGesture = normalizeGesture(event.opponentGesture)
         updateSession {
             it.copy(
                 matchResult = event.result,
-                playerGesture = event.playerGesture ?: it.playerGesture,
-                opponentGesture = event.opponentGesture ?: it.opponentGesture,
+                playerGesture = playerGesture ?: it.playerGesture,
+                opponentGesture = opponentGesture ?: it.opponentGesture,
                 playerScore = event.playerScore,
                 opponentScore = event.opponentScore,
                 showPlayAgain = true,
@@ -225,8 +230,8 @@ class OnlineMatchViewModel @Inject constructor(
         if (sessionId != null) {
             val args = GameResultArgs(
                 sessionId = sessionId,
-                playerGesture = event.playerGesture,
-                opponentGesture = event.opponentGesture,
+                playerGesture = playerGesture,
+                opponentGesture = opponentGesture,
                 playerScore = event.playerScore,
                 opponentScore = event.opponentScore,
                 roundCount = event.round,
@@ -239,8 +244,8 @@ class OnlineMatchViewModel @Inject constructor(
                     BattleResultRequest(
                         sessionId = sessionId,
                         result = event.result,
-                        playerGesture = event.playerGesture,
-                        opponentGesture = event.opponentGesture,
+                        playerGesture = playerGesture,
+                        opponentGesture = opponentGesture,
                         playerScore = event.playerScore,
                         opponentScore = event.opponentScore,
                         round = event.round,
@@ -290,8 +295,8 @@ class OnlineMatchViewModel @Inject constructor(
                 updateSession { it.copy(opponentReady = ready) }
             }
             "opponent_gesture" -> {
-                val gesture = event.payload?.optString("gesture")
-                updateSession { it.copy(opponentGesture = gesture ?: it.opponentGesture) }
+                val gesture = normalizeGesture(event.payload?.optString("gesture"))
+                updateSession { it.copy(opponentGesture = gesture) }
             }
             "status" -> {
                 val message = event.payload?.optString("message")

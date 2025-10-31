@@ -15,6 +15,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.zazeks.R
+import com.example.zazeks.core.gestures.formatGesture
 import com.example.zazeks.databinding.FragmentOnlineMatchBinding
 import com.example.zazeks.infra.camera.CameraFrameAnalyzerFactory
 import com.example.zazeks.infra.camera.CameraSession
@@ -176,8 +177,8 @@ class OnlineMatchFragment : Fragment() {
         binding.playAgainButton.isVisible = session.showPlayAgain
         binding.blackoutOverlay.isVisible = session.blackout
 
-        binding.playerGestureLabel.text = formatGesture(session.playerGesture ?: detection.gesture)
-        binding.opponentGestureLabel.text = formatGesture(session.opponentGesture)
+        binding.playerGestureLabel.text = requireContext().formatGesture(session.playerGesture ?: detection.gesture)
+        binding.opponentGestureLabel.text = requireContext().formatGesture(session.opponentGesture)
 
         when {
             detection.isProcessing -> {
@@ -217,14 +218,6 @@ class OnlineMatchFragment : Fragment() {
             putParcelable(OfflineMatchFragment.ARG_GAME_RESULT, result)
         }
         findNavController().navigate(R.id.action_onlineMatchFragment_to_resultsFragment, args)
-    }
-
-    private fun formatGesture(value: String?): String = when (value?.lowercase()) {
-        "rock" -> getString(R.string.game_select_rock)
-        "paper" -> getString(R.string.game_select_paper)
-        "scissors" -> getString(R.string.game_select_scissors)
-        null, "", "unknown" -> getString(R.string.game_gesture_unknown)
-        else -> value
     }
 
     private fun formatOutcome(code: String): String = when (code.lowercase()) {

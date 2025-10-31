@@ -83,7 +83,7 @@ class OnlineMatchRepository @Inject constructor(
 
     fun sendGesture(gesture: String?, lastValidGesture: String?) {
         val payload = JSONObject()
-        payload.put("gesture", gesture ?: JSONObject.NULL)
+        payload.put("gesture", gesture ?: "none")
         payload.put("lastValidGesture", lastValidGesture ?: JSONObject.NULL)
         val message = JSONObject()
         message.put(TYPE_FIELD, "gesture")
