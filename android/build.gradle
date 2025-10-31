@@ -6,6 +6,11 @@ plugins {
     id 'com.google.dagger.hilt.android'
 }
 
+repositories {
+    google()
+    mavenCentral()
+}
+
 import java.util.Properties
 
 android {
