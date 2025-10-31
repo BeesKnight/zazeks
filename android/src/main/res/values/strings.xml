@@ -71,4 +71,15 @@
     <string name="online_play_again">Сыграть ещё</string>
     <string name="online_results_button">В результаты</string>
     <string name="online_status_waiting">Ожидание соперника…</string>
+    <string name="auth_title">Добро пожаловать</string>
+    <string name="auth_subtitle">Войдите или создайте аккаунт, чтобы продолжить</string>
+    <string name="auth_tab_login">Вход</string>
+    <string name="auth_tab_register">Регистрация</string>
+    <string name="auth_username_hint">Имя пользователя</string>
+    <string name="auth_password_hint">Пароль</string>
+    <string name="auth_confirm_password_hint">Повторите пароль</string>
+    <string name="auth_login_button">Войти</string>
+    <string name="auth_register_button">Создать аккаунт</string>
+    <string name="auth_error_generic">Что-то пошло не так. Попробуйте снова.</string>
+    <string name="auth_logout">Выйти</string>
 </resources>
