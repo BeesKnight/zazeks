@@ -1,12 +1,73 @@
-backend/src/database/test.db
-backend/src/database/__pycache__
-backend/src/api/__pycache__
-backend/src/__pycache__
-/venv
-model/dataset
-/.idea
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
 
-# Android signing artifacts (keystores should not be committed)
-android/signing/*.jks
-android/signing/signing.properties
-!android/signing/signing.properties.example
+# --- IDEs / editors ---
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+.history/
+
+# --- Logs / temp ---
+*.log
+*.tmp
+*.swp
+*.swo
+
+# --- Gradle (кэш и артефакты) ---
+.gradle/
+**/.gradle/
+build/
+**/build/
+
+# Не игнорировать Gradle Wrapper (его нужно коммитить)
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+!*/gradle/wrapper/gradle-wrapper.jar
+!*/gradle/wrapper/gradle-wrapper.properties
+gradle/wrapper/dists/
+**/gradle/wrapper/dists/
+
+# --- Java/Kotlin compiled ---
+out/
+bin/
+*.class
+
+# --- Android specific ---
+local.properties
+.cxx/
+.externalNativeBuild/
+captures/
+# вариант, если появляется в модуле app
+app/release/
+app/reports/
+
+# подписи/ключи (НЕ хранить в репозитории)
+*.jks
+*.keystore
+*.pem
+*.p12
+*.pfx
+*.keystore.properties
+*.signing.properties
+signing/**
+!signing/.gitkeep
+!signing/README.md
+
+# --- Node/npm (на случай наличия скриптов в docs и т.п.) ---
+node_modules/
+npm-debug.log*
+yarn.lock
+pnpm-lock.yaml
+
+# --- Python (на случай папки model) ---
+.venv/
+venv/
+__pycache__/
+*.pyc
+.mypy_cache/
+.pytest_cache/
