@@ -6,10 +6,15 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.example.zazeks.R
+import com.example.zazeks.data.auth.AuthRepository
 import com.example.zazeks.databinding.FragmentMainMenuBinding
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainMenuFragment : Fragment() {
@@ -18,6 +23,9 @@ class MainMenuFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: MainMenuViewModel by viewModels()
+
+    @Inject
+    lateinit var authRepository: AuthRepository
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -45,6 +53,20 @@ class MainMenuFragment : Fragment() {
         }
         binding.openResultsButton.setOnClickListener {
             findNavController().navigate(R.id.action_mainMenuFragment_to_resultsFragment)
+        }
+        binding.logoutButton.setOnClickListener {
+            binding.logoutButton.isEnabled = false
+            viewLifecycleOwner.lifecycleScope.launch {
+                try {
+                    authRepository.logout()
+                    val navOptions = NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_graph, true)
+                        .build()
+                    findNavController().navigate(R.id.authFragment, null, navOptions)
+                } finally {
+                    binding.logoutButton.isEnabled = true
+                }
+            }
         }
 
         viewModel.state.observe(viewLifecycleOwner) { state ->
