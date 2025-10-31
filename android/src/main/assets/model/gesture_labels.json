@@ -1,8 +1,6 @@
 [
-  "swipe_left",
-  "swipe_right",
-  "pinch",
-  "expand",
-  "tap"
+  "rock",
+  "paper",
+  "scissors",
+  "none"
 ]
-

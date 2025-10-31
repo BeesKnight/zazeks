@@ -14,6 +14,8 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.zazeks.R
+import com.example.zazeks.core.gestures.formatGesture
+import com.example.zazeks.core.gestures.normalizeGesture
 import com.example.zazeks.databinding.FragmentOfflineMatchBinding
 import com.example.zazeks.infra.camera.CameraFrameAnalyzerFactory
 import com.example.zazeks.infra.camera.CameraSession
@@ -156,12 +158,10 @@ class OfflineMatchFragment : Fragment() {
         binding.timerLabel.text = getString(R.string.offline_timer_format, max(0.0, session.remainingSeconds))
         binding.scoreLabel.text = getString(R.string.offline_score_format, session.playerScore, session.opponentScore)
 
-        val gestureForDisplay = when {
-            session.playerGesture != null -> session.playerGesture
-            detection.hasGesture() -> detection.gesture
-            else -> null
-        }
-        binding.playerGestureLabel.text = formatGesture(gestureForDisplay)
+        val playerGesture = normalizeGesture(session.playerGesture)
+        val detectionGesture = normalizeGesture(detection.gesture)
+        val gestureForDisplay = playerGesture ?: detectionGesture
+        binding.playerGestureLabel.text = requireContext().formatGesture(gestureForDisplay)
 
         val detectionErrorText = detection.errorMessage ?: detection.errorMessageRes?.let { getString(it) }
         val detectionStatus = when {
@@ -174,7 +174,7 @@ class OfflineMatchFragment : Fragment() {
         binding.playerDetectionStatus.isVisible = !detectionStatus.isNullOrBlank()
         binding.playerDetectionStatus.text = detectionStatus.orEmpty()
 
-        binding.opponentGestureLabel.text = formatGesture(session.opponentGesture)
+        binding.opponentGestureLabel.text = requireContext().formatGesture(session.opponentGesture)
 
         val roundResult = session.roundResult
         binding.roundResultLabel.isVisible = !roundResult.isNullOrBlank()
@@ -223,14 +223,6 @@ class OfflineMatchFragment : Fragment() {
             putParcelable(ARG_GAME_RESULT, result)
         }
         findNavController().navigate(R.id.action_offlineMatchFragment_to_resultsFragment, bundle)
-    }
-
-    private fun formatGesture(value: String?): String = when (value?.lowercase()) {
-        "rock" -> getString(R.string.game_select_rock)
-        "paper" -> getString(R.string.game_select_paper)
-        "scissors" -> getString(R.string.game_select_scissors)
-        null -> getString(R.string.game_gesture_unknown)
-        else -> value
     }
 
     private fun formatOutcome(code: String?): String = when (code?.lowercase()) {

@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.zazeks.R
+import com.example.zazeks.core.gestures.formatGesture
 import com.example.zazeks.databinding.ItemRoundResultBinding
 import com.example.zazeks.domain.results.ResultMode
 import com.example.zazeks.domain.results.RoundResult
@@ -43,8 +44,8 @@ class RoundResultsAdapter(
             )
             binding.gesturesLabel.text = resources.getString(
                 R.string.results_round_gestures_format,
-                formatGesture(item.playerGesture),
-                formatGesture(item.opponentGesture)
+                binding.root.context.formatGesture(item.playerGesture),
+                binding.root.context.formatGesture(item.opponentGesture)
             )
             val hasScore = item.playerScore != null && item.opponentScore != null
             binding.scoreLabel.isVisible = hasScore
@@ -59,14 +60,6 @@ class RoundResultsAdapter(
             binding.timestampLabel.text = timestampLabel?.let {
                 resources.getString(R.string.results_round_played_at_format, it)
             } ?: resources.getString(R.string.results_round_played_at_unknown)
-        }
-
-        private fun formatGesture(value: String?): String = when (value?.lowercase()) {
-            "rock" -> binding.root.context.getString(R.string.game_select_rock)
-            "paper" -> binding.root.context.getString(R.string.game_select_paper)
-            "scissors" -> binding.root.context.getString(R.string.game_select_scissors)
-            null -> binding.root.context.getString(R.string.results_gesture_unknown)
-            else -> value
         }
 
         private fun formatOutcome(code: String?): String = when (code?.lowercase()) {

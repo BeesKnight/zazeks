@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.zazeks.R
+import com.example.zazeks.core.gestures.normalizeGesture
 import com.example.zazeks.di.IoDispatcher
 import com.example.zazeks.domain.game.AbandonGameUseCase
 import com.example.zazeks.domain.game.ConfirmRoundResultUseCase
@@ -153,7 +154,7 @@ class OfflineMatchViewModel @Inject constructor(
             )
             try {
                 val result = withContext(ioDispatcher) { neuralModelBridge.detect(frame) }
-                val gesture = result.gesture.orEmpty().ifBlank { null }
+                val gesture = normalizeGesture(result.gesture)
                 updateDetection(
                     latestDetection.copy(
                         gesture = gesture,
@@ -199,7 +200,7 @@ class OfflineMatchViewModel @Inject constructor(
     }
 
     private fun submitDetectedGesture() {
-        val gesture = latestDetection.gesture?.takeIf { it.isNotBlank() }
+        val gesture = normalizeGesture(latestDetection.gesture)
         if (gesture == null) {
             updateDetection(
                 latestDetection.copy(
@@ -218,7 +219,7 @@ class OfflineMatchViewModel @Inject constructor(
             )
         )
         viewModelScope.launch {
-            handleResult(submitGestureUseCase(gesture.lowercase()))
+            handleResult(submitGestureUseCase(gesture))
         }
     }
 

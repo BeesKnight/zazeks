@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.example.zazeks.R
+import com.example.zazeks.core.gestures.formatGesture
 import com.example.zazeks.data.auth.AuthRepository
 import com.example.zazeks.databinding.FragmentMainMenuBinding
 import com.example.zazeks.databinding.ItemMainMenuResultBinding
@@ -128,8 +129,8 @@ class MainMenuFragment : Fragment() {
             binding.offlineGestureSummary.isVisible = true
             binding.offlineGestureSummary.text = getString(
                 R.string.results_round_gestures_format,
-                formatGesture(result.playerGesture),
-                formatGesture(result.opponentGesture)
+                requireContext().formatGesture(result.playerGesture),
+                requireContext().formatGesture(result.opponentGesture)
             )
             val hasScore = result.playerScore != null && result.opponentScore != null
             binding.offlineScore.isVisible = hasScore
@@ -167,8 +168,8 @@ class MainMenuFragment : Fragment() {
             )
             itemBinding.gesturesLabel.text = getString(
                 R.string.results_round_gestures_format,
-                formatGesture(result.playerGesture),
-                formatGesture(result.opponentGesture)
+                requireContext().formatGesture(result.playerGesture),
+                requireContext().formatGesture(result.opponentGesture)
             )
             val hasScore = result.playerScore != null && result.opponentScore != null
             itemBinding.scoreLabel.isVisible = hasScore
@@ -211,14 +212,6 @@ class MainMenuFragment : Fragment() {
         } else {
             getString(R.string.menu_profile_description_guest)
         }
-
-    private fun formatGesture(value: String?): String = when (value?.lowercase()) {
-        "rock" -> getString(R.string.game_select_rock)
-        "paper" -> getString(R.string.game_select_paper)
-        "scissors" -> getString(R.string.game_select_scissors)
-        null -> getString(R.string.results_gesture_unknown)
-        else -> value
-    }
 
     private fun formatOutcome(code: String?): String = when (code?.lowercase()) {
         "win" -> getString(R.string.game_result_win)

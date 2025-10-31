@@ -1,6 +1,7 @@
 package com.example.zazeks.ui.offline
 
 import android.os.Parcelable
+import com.example.zazeks.core.gestures.isRecognizedGesture
 import kotlinx.parcelize.Parcelize
 
 /**
@@ -50,5 +51,5 @@ data class DetectionUiModel(
     val errorMessage: String? = null,
     val errorMessageRes: Int? = null
 ) : Parcelable {
-    fun hasGesture(): Boolean = !gesture.isNullOrBlank()
+    fun hasGesture(): Boolean = isRecognizedGesture(gesture)
 }
