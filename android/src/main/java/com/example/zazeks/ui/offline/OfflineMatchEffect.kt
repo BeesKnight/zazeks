@@ -16,5 +16,6 @@ data class GameResultArgs(
     val playerScore: Int,
     val opponentScore: Int,
     val roundCount: Int,
-    val matchResult: String?
+    val matchResult: String?,
+    val mode: String? = null,
 ) : Parcelable
