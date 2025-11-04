@@ -2,6 +2,10 @@ package com.zazeks.api;
 
 import com.zazeks.database.InMemoryDatabase;
 import com.zazeks.database.models.DetectionMetadata;
+import com.zazeks.ml.GestureDetector;
+import com.zazeks.ml.GestureDetector.BoundingBox;
+import com.zazeks.ml.GestureDetector.Detection;
+import com.zazeks.ml.ModelInferenceException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,9 +18,11 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class InferenceService {
     private final InMemoryDatabase database;
+    private final GestureDetector detector;
 
-    public InferenceService(InMemoryDatabase database) {
+    public InferenceService(InMemoryDatabase database, GestureDetector detector) {
         this.database = database;
+        this.detector = detector;
     }
 
     public DetectionResult detectGesture(MultipartFile file, Integer userId) {
@@ -26,20 +32,13 @@ public class InferenceService {
         long started = System.nanoTime();
         try {
             byte[] bytes = file.getBytes();
-            int hash = 0;
-            for (byte b : bytes) {
-                hash = (hash + (b & 0xFF)) % 3;
-            }
-            String gesture = switch (hash) {
-                case 0 -> "Paper";
-                case 1 -> "Rock";
-                default -> "Scissors";
-            };
-            double confidence = switch (hash) {
-                case 0 -> 0.78;
-                case 1 -> 0.72;
-                default -> 0.75;
-            };
+            Detection detection = detector.detect(bytes);
+            String gesture = detection.label();
+            double confidence = detection.confidence();
+            BoundingBox boundingBox = detection.boundingBox();
+            List<Double> bbox = boundingBox == null
+                    ? Collections.emptyList()
+                    : List.of(boundingBox.x1(), boundingBox.y1(), boundingBox.x2(), boundingBox.y2());
             long durationMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
             DetectionMetadata metadata = new DetectionMetadata(
                     userId,
@@ -53,7 +52,7 @@ public class InferenceService {
             DetectionMetadata persisted = database.saveDetectionMetadata(metadata);
             return new DetectionResult(
                     gesture,
-                    Collections.emptyList(),
+                    bbox,
                     persisted.getId(),
                     persisted.getDetectedAt(),
                     persisted.getConfidence(),
@@ -61,11 +60,13 @@ public class InferenceService {
             );
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to read file", e);
+        } catch (ModelInferenceException e) {
+            throw new IllegalArgumentException(e.getMessage(), e);
         }
     }
 
     public record DetectionResult(String gesture,
-                                  List<Integer> bbox,
+                                  List<Double> bbox,
                                   long detectionId,
                                   Instant detectedAt,
                                   double confidence,

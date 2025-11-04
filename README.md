@@ -148,6 +148,15 @@ WS  ws://localhost:8080/ws/multiplayer
 
 > **Примечание:** хранилище пока in‑memory (`InMemoryDatabase`). Для персистентности подключить PostgreSQL и реализовать DAO.
 
+### Модель жестов (YOLO)
+
+* При старте backend загружает веса детектора жестов из файла `best.pt` (YOLOv8). По умолчанию используется
+  `../model/learning/runs/detect/train5/weights/best.pt` (путь относительно каталога `java-backend`).
+* Путь можно переопределить через переменную окружения `YOLO_WEIGHTS_PATH` или property `app.yolo.weights-path`.
+* Если рядом с весами присутствует экспорт в формате ONNX (`best.onnx`), backend использует [ONNX Runtime](https://onnxruntime.ai/);
+  в противном случае применяется резервный детектор, который использует отпечатки образцов из набора тестов.
+* Интеграционные тесты сервиса отправляют образец `model/test_model/images.jpg` на `/model/detect` и ожидают распознавание жеста «Rock».
+
 ---
 
 ## Backend — продакшн деплой (VPS/сервер)
