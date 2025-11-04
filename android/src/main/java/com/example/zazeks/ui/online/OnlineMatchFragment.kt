@@ -114,6 +114,8 @@ class OnlineMatchFragment : Fragment() {
                 binding.playerDetectionStatus.isVisible = true
                 binding.playerDetectionStatus.text = throwable.localizedMessage
                     ?: getString(R.string.offline_detection_error)
+                binding.playerGestureOverlay.setDetection(null)
+                binding.playerGestureOverlay.isVisible = false
             }
         }
     }
@@ -121,6 +123,8 @@ class OnlineMatchFragment : Fragment() {
     private fun showPermissionWarning() {
         binding.playerDetectionStatus.isVisible = true
         binding.playerDetectionStatus.text = getString(R.string.offline_permission_required)
+        binding.playerGestureOverlay.setDetection(null)
+        binding.playerGestureOverlay.isVisible = false
     }
 
     private fun renderState(state: OnlineMatchViewState) {
@@ -195,6 +199,8 @@ class OnlineMatchFragment : Fragment() {
                 binding.playerDetectionStatus.text = getString(R.string.offline_detection_hint)
             }
         }
+        binding.playerGestureOverlay.setDetection(detection.boundingBox)
+        binding.playerGestureOverlay.isVisible = detection.hasBoundingBox()
 
         val readyText = if (session.playerReady) {
             R.string.online_ready_cancel_button

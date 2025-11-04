@@ -1,3 +1,6 @@
 app:
   yolo:
     weights-path: ${YOLO_WEIGHTS_PATH:../model/learning/runs/detect/train5/weights/best.pt}
+    # Optional: override to point to a specific Python binary for Ultralytics export
+    # python-executable: ${YOLO_PYTHON_BIN:python3}
+    # export-timeout-seconds: ${YOLO_EXPORT_TIMEOUT:180}

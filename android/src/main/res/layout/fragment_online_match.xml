@@ -97,16 +97,30 @@
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintStart_toStartOf="parent" />
 
-                <androidx.camera.view.PreviewView
-                    android:id="@+id/playerPreview"
+                <FrameLayout
+                    android:id="@+id/playerPreviewContainer"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
                     android:layout_marginTop="8dp"
-                    android:background="@android:color/black"
                     app:layout_constraintTop_toBottomOf="@id/playerNameLabel"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintBottom_toTopOf="@id/playerReadyStatus" />
+                    app:layout_constraintBottom_toTopOf="@id/playerReadyStatus">
+
+                    <androidx.camera.view.PreviewView
+                        android:id="@+id/playerPreview"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/black" />
+
+                    <com.example.zazeks.ui.common.DetectionOverlayView
+                        android:id="@+id/playerGestureOverlay"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:importantForAccessibility="no"
+                        android:clickable="false"
+                        android:focusable="false" />
+                </FrameLayout>
 
                 <TextView
                     android:id="@+id/playerGestureLabel"
@@ -123,7 +137,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
-                    app:layout_constraintTop_toBottomOf="@id/playerPreview"
+                    app:layout_constraintTop_toBottomOf="@id/playerPreviewContainer"
                     app:layout_constraintStart_toStartOf="parent" />
 
                 <TextView

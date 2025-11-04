@@ -32,7 +32,7 @@ public final class NeuralModelBridgeTest {
     public void remoteBridgeParsesPythonLikeResponse() throws Exception {
         mockWebServer.enqueue(new MockResponse()
             .setResponseCode(200)
-            .setBody("{\"gesture\":\"Rock\",\"bbox\":[10,20,30,40]}")
+            .setBody("{\"gesture\":\"Rock\",\"bbox\":[10,20,30,40],\"confidence\":0.91}")
             .addHeader("Content-Type", "application/json"));
 
         NeuralModelBridge bridge = NeuralModelBridge.remoteHttp(mockWebServer.url("/").toString());
@@ -43,6 +43,9 @@ public final class NeuralModelBridgeTest {
         assertEquals("Rock", result.getGesture());
         assertTrue(result.hasDetection());
         assertArrayEquals(new int[]{10, 20, 30, 40}, result.getBoundingBox());
+        assertEquals(0.91, result.getConfidence(), 1e-6);
+        assertEquals(640, result.getFrameWidth());
+        assertEquals(480, result.getFrameHeight());
 
         okhttp3.mockwebserver.RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertEquals("/model/detect", recordedRequest.getPath());

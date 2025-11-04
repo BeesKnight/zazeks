@@ -129,6 +129,8 @@ class OfflineMatchFragment : Fragment() {
                 binding.playerDetectionStatus.isVisible = true
                 binding.playerDetectionStatus.text = throwable.localizedMessage
                     ?: getString(R.string.offline_detection_error)
+                binding.gestureOverlay.setDetection(null)
+                binding.gestureOverlay.isVisible = false
             }
         }
     }
@@ -136,6 +138,8 @@ class OfflineMatchFragment : Fragment() {
     private fun showPermissionWarning() {
         binding.playerDetectionStatus.isVisible = true
         binding.playerDetectionStatus.text = getString(R.string.offline_permission_required)
+        binding.gestureOverlay.setDetection(null)
+        binding.gestureOverlay.isVisible = false
     }
 
     private fun renderState(state: ViewState) {
@@ -173,6 +177,8 @@ class OfflineMatchFragment : Fragment() {
         }
         binding.playerDetectionStatus.isVisible = !detectionStatus.isNullOrBlank()
         binding.playerDetectionStatus.text = detectionStatus.orEmpty()
+        binding.gestureOverlay.setDetection(detection.boundingBox)
+        binding.gestureOverlay.isVisible = detection.hasBoundingBox()
 
         binding.opponentGestureLabel.text = requireContext().formatGesture(session.opponentGesture)
 

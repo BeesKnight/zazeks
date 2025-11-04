@@ -6,6 +6,10 @@ import ai.onnxruntime.OrtException;
 import ai.onnxruntime.OrtSession;
 import ai.onnxruntime.TensorInfo;
 import jakarta.annotation.PreDestroy;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -13,23 +17,34 @@ import javax.imageio.ImageIO;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.FloatBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+
+import java.time.Duration;
+
 import java.util.Collections;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
+
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * YOLOv8-based detector powered by ONNX Runtime.
  */
 @Component
 public class YoloDetector implements GestureDetector {
+    private static final Logger LOG = LoggerFactory.getLogger(YoloDetector.class);
     private static final List<String> CLASS_NAMES = List.of("Paper", "Rock", "Scissors");
 
     private static final Map<String, String> FINGERPRINT_LABELS = Map.of(
@@ -50,7 +65,11 @@ public class YoloDetector implements GestureDetector {
     private final int inputWidth;
     private final int inputHeight;
 
-    public YoloDetector(@Value("${app.yolo.weights-path}") String weightsPath) {
+
+    public YoloDetector(@Value("${app.yolo.weights-path}") String weightsPath,
+                        @Value("${app.yolo.python-executable:python3}") String pythonExecutable,
+                        @Value("${app.yolo.export-timeout-seconds:180}") long exportTimeoutSeconds) {
+        Objects.requireNonNull(weightsPath, "weightsPath");
         Path modelPath = Path.of(weightsPath).toAbsolutePath().normalize();
         if (!Files.exists(modelPath)) {
             throw new ModelInferenceException("Weights file not found: " + modelPath);
@@ -79,19 +98,45 @@ public class YoloDetector implements GestureDetector {
                 throw new ModelInferenceException("Failed to initialise YOLO detector", e);
             }
         } else {
-            try {
-                this.mode = Mode.FINGERPRINT;
-                this.environment = null;
-                this.session = null;
-                this.inputName = null;
-                this.inputWidth = 0;
-                this.inputHeight = 0;
-                byte[] weights = Files.readAllBytes(modelPath);
-                if (weights.length == 0) {
-                    throw new ModelInferenceException("YOLO weights file is empty: " + modelPath);
+            Path onnxPath = convertPtToOnnx(modelPath, pythonExecutable, Duration.ofSeconds(exportTimeoutSeconds));
+            if (onnxPath != null) {
+                try {
+                    this.mode = Mode.ONNX;
+                    this.environment = OrtEnvironment.getEnvironment();
+                    OrtSession.SessionOptions options = new OrtSession.SessionOptions();
+                    options.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT);
+                    try {
+                        this.session = environment.createSession(onnxPath.toString(), options);
+                    } finally {
+                        options.close();
+                    }
+                    this.inputName = session.getInputNames().iterator().next();
+                    var nodeInfo = session.getInputInfo().get(inputName);
+                    if (!(nodeInfo.getInfo() instanceof TensorInfo tensorInfo)) {
+                        throw new ModelInferenceException("Unsupported input tensor");
+                    }
+                    long[] shape = tensorInfo.getShape();
+                    this.inputHeight = shape.length >= 3 && shape[2] > 0 ? (int) shape[2] : 640;
+                    this.inputWidth = shape.length >= 4 && shape[3] > 0 ? (int) shape[3] : 640;
+                } catch (OrtException e) {
+                    throw new ModelInferenceException("Failed to initialise YOLO detector", e);
                 }
-            } catch (IOException e) {
-                throw new ModelInferenceException("Failed to load YOLO weights: " + modelPath, e);
+            } else {
+                try {
+                    this.mode = Mode.FINGERPRINT;
+                    this.environment = null;
+                    this.session = null;
+                    this.inputName = null;
+                    this.inputWidth = 0;
+                    this.inputHeight = 0;
+                    byte[] weights = Files.readAllBytes(modelPath);
+                    if (weights.length == 0) {
+                        throw new ModelInferenceException("YOLO weights file is empty: " + modelPath);
+                    }
+                    LOG.warn("Running YOLO detector in fingerprint fallback mode. Install Ultralytics and export ONNX weights for full functionality.");
+                } catch (IOException e) {
+                    throw new ModelInferenceException("Failed to load YOLO weights: " + modelPath, e);
+                }
             }
         }
     }
@@ -164,6 +209,80 @@ public class YoloDetector implements GestureDetector {
         }
         BoundingBox box = new BoundingBox(0.0, 0.0, image.getWidth(), image.getHeight());
         return new Detection(label, FALLBACK_CONFIDENCE, box);
+    }
+
+    private Path convertPtToOnnx(Path ptPath, String pythonExecutable, Duration timeout) {
+        Path onnxPath = replaceExtension(ptPath, ".onnx");
+        try {
+            if (Files.exists(onnxPath)) {
+                if (Files.getLastModifiedTime(onnxPath).toMillis() >= Files.getLastModifiedTime(ptPath).toMillis()) {
+                    LOG.info("Using cached ONNX weights at {}", onnxPath);
+                    return onnxPath;
+                }
+                LOG.info("Existing ONNX weights older than PT source, regenerating at {}", onnxPath);
+            }
+        } catch (IOException e) {
+            LOG.warn("Failed to compare modification timestamps for {} and {}", ptPath, onnxPath, e);
+        }
+
+        ProcessBuilder builder = new ProcessBuilder(
+                pythonExecutable,
+                "-m",
+                "ultralytics",
+                "export",
+                "model=" + ptPath.toString(),
+                "format=onnx",
+                "imgsz=640",
+                "simplify=True",
+                "opset=12"
+        );
+        builder.directory(ptPath.getParent().toFile());
+        builder.redirectErrorStream(true);
+        LOG.info("Exporting YOLO weights from {} to ONNX using {}", ptPath, pythonExecutable);
+        try {
+            Process process = builder.start();
+            StringBuilder output = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line).append(System.lineSeparator());
+                }
+            }
+            boolean completed = process.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS);
+            if (!completed) {
+                process.destroyForcibly();
+                LOG.error("Ultralytics export timed out after {} seconds", timeout.toSeconds());
+                return null;
+            }
+            int exit = process.exitValue();
+            if (exit != 0) {
+                LOG.error("Ultralytics export failed with exit code {}. Output:{}", exit, System.lineSeparator() + output);
+                return null;
+            }
+            LOG.debug("Ultralytics export output:{}", System.lineSeparator() + output);
+            if (Files.exists(onnxPath)) {
+                LOG.info("Successfully exported ONNX weights to {}", onnxPath);
+                return onnxPath;
+            }
+            LOG.error("Ultralytics export completed but ONNX file not found at {}", onnxPath);
+            return null;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            LOG.error("Interrupted while exporting YOLO weights", e);
+            return null;
+        } catch (IOException e) {
+            LOG.error("Failed to export YOLO weights using Ultralytics", e);
+            return null;
+        }
+    }
+
+    private Path replaceExtension(Path path, String newExtension) {
+        String fileName = path.getFileName().toString();
+        int dot = fileName.lastIndexOf('.');
+        if (dot >= 0) {
+            fileName = fileName.substring(0, dot);
+        }
+        return path.getParent().resolve(fileName + newExtension);
     }
 
     private BufferedImage decode(byte[] imageBytes) {

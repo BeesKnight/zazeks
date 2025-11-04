@@ -60,16 +60,30 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <androidx.camera.view.PreviewView
-            android:id="@+id/cameraPreview"
+        <FrameLayout
+            android:id="@+id/cameraContainer"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginBottom="16dp"
-            android:background="@android:color/black"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/infoContainer" />
+            app:layout_constraintBottom_toTopOf="@id/infoContainer">
+
+            <androidx.camera.view.PreviewView
+                android:id="@+id/cameraPreview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/black" />
+
+            <com.example.zazeks.ui.common.DetectionOverlayView
+                android:id="@+id/gestureOverlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:importantForAccessibility="no"
+                android:clickable="false"
+                android:focusable="false" />
+        </FrameLayout>
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/playerCard"
@@ -78,8 +92,8 @@
             android:layout_margin="12dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="4dp"
-            app:layout_constraintTop_toTopOf="@id/cameraPreview"
-            app:layout_constraintStart_toStartOf="@id/cameraPreview"
+            app:layout_constraintTop_toTopOf="@id/cameraContainer"
+            app:layout_constraintStart_toStartOf="@id/cameraContainer"
             app:layout_constraintEnd_toStartOf="@id/opponentCard"
             app:layout_constraintBottom_toTopOf="@id/infoContainer"
             app:layout_constraintWidth_percent="0.48">
@@ -123,8 +137,8 @@
             android:layout_margin="12dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="4dp"
-            app:layout_constraintTop_toTopOf="@id/cameraPreview"
-            app:layout_constraintEnd_toEndOf="@id/cameraPreview"
+            app:layout_constraintTop_toTopOf="@id/cameraContainer"
+            app:layout_constraintEnd_toEndOf="@id/cameraContainer"
             app:layout_constraintStart_toEndOf="@id/playerCard"
             app:layout_constraintBottom_toTopOf="@id/infoContainer"
             app:layout_constraintWidth_percent="0.48">
@@ -159,7 +173,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="8dp"
-            app:layout_constraintTop_toBottomOf="@id/cameraPreview"
+            app:layout_constraintTop_toBottomOf="@id/cameraContainer"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">

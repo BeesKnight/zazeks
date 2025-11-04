@@ -7,6 +7,8 @@ import com.zazeks.database.InMemoryDatabase;
 import com.zazeks.database.models.MultiplayerGame;
 import com.zazeks.database.models.MultiplayerSession;
 import com.zazeks.database.models.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -28,6 +30,8 @@ import java.util.function.Consumer;
 
 @Service
 public class MultiplayerService {
+    private static final Logger LOG = LoggerFactory.getLogger(MultiplayerService.class);
+
     private final InMemoryDatabase database;
     private final ObjectMapper objectMapper;
     private final ConcurrentLinkedQueue<PlayerConnection> waitingPlayers = new ConcurrentLinkedQueue<>();
@@ -439,10 +443,34 @@ public class MultiplayerService {
         }
 
         private void sendSafe(WebSocketSession session, String message) {
-            synchronized (session) {
+            if (session == null) {
+                return;
+            }
+            int attempts = 0;
+            while (attempts < 3) {
                 try {
-                    session.sendMessage(new TextMessage(message));
-                } catch (IOException ignored) {
+                    synchronized (session) {
+                        if (!session.isOpen()) {
+                            return;
+                        }
+                        session.sendMessage(new TextMessage(message));
+                        return;
+                    }
+                } catch (IllegalStateException e) {
+                    attempts++;
+                    if (attempts >= 3) {
+                        LOG.warn("Failed to send WS message after {} attempts", attempts, e);
+                        return;
+                    }
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException interrupted) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                } catch (IOException e) {
+                    LOG.warn("IO error while sending WS message", e);
+                    return;
                 }
             }
         }
