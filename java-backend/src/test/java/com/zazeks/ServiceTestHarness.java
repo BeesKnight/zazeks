@@ -8,6 +8,7 @@ import com.zazeks.api.InferenceService;
 import com.zazeks.api.MultiplayerService;
 import com.zazeks.api.UserService;
 import com.zazeks.database.InMemoryDatabase;
+import com.zazeks.ml.GestureDetector;
 import com.zazeks.security.PasswordService;
 import com.zazeks.security.TokenService;
 import org.junit.jupiter.api.AfterEach;
@@ -26,6 +27,7 @@ public abstract class ServiceTestHarness {
     protected MultiplayerService multiplayerService;
     protected AdminService adminService;
     protected InferenceService inferenceService;
+    protected GestureDetector gestureDetector;
 
     @BeforeEach
     void setUpHarness() {
@@ -37,7 +39,16 @@ public abstract class ServiceTestHarness {
         userService = new UserService(database);
         multiplayerService = new MultiplayerService(database, new ObjectMapper());
         adminService = new AdminService(database);
-        inferenceService = new InferenceService(database);
+        gestureDetector = createDetector();
+        inferenceService = new InferenceService(database, gestureDetector);
+    }
+
+    protected GestureDetector createDetector() {
+        return imageBytes -> new GestureDetector.Detection(
+                "Stub",
+                0.99,
+                new GestureDetector.BoundingBox(1.0, 2.0, 3.0, 4.0)
+        );
     }
 
     @AfterEach

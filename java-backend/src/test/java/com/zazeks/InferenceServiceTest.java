@@ -6,6 +6,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,6 +24,9 @@ class InferenceServiceTest extends ServiceTestHarness {
         assertTrue(result.detectionId() > 0);
         assertTrue(result.durationMillis() >= 0);
         assertEquals(1, database.findAllDetectionMetadata().size());
+        assertEquals("Stub", result.gesture());
+        assertEquals(0.99, result.confidence());
+        assertEquals(List.of(1.0, 2.0, 3.0, 4.0), result.bbox());
     }
 
     @Test

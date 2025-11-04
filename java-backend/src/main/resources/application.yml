@@ -1,0 +1,3 @@
+app:
+  yolo:
+    weights-path: ${YOLO_WEIGHTS_PATH:../model/learning/runs/detect/train5/weights/best.pt}
