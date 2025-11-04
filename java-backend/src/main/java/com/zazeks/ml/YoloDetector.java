@@ -6,8 +6,10 @@ import ai.onnxruntime.OrtException;
 import ai.onnxruntime.OrtSession;
 import ai.onnxruntime.TensorInfo;
 import jakarta.annotation.PreDestroy;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +17,7 @@ import javax.imageio.ImageIO;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -25,11 +28,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+
 import java.time.Duration;
+
 import java.util.Collections;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
+
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -39,7 +45,6 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class YoloDetector implements GestureDetector {
     private static final Logger LOG = LoggerFactory.getLogger(YoloDetector.class);
-
     private static final List<String> CLASS_NAMES = List.of("Paper", "Rock", "Scissors");
 
     private static final Map<String, String> FINGERPRINT_LABELS = Map.of(
@@ -59,6 +64,7 @@ public class YoloDetector implements GestureDetector {
     private final String inputName;
     private final int inputWidth;
     private final int inputHeight;
+
 
     public YoloDetector(@Value("${app.yolo.weights-path}") String weightsPath,
                         @Value("${app.yolo.python-executable:python3}") String pythonExecutable,
