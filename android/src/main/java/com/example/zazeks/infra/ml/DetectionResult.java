@@ -9,10 +9,16 @@ import java.util.Objects;
 public final class DetectionResult {
     private final String gesture;
     private final int[] boundingBox;
+    private final double confidence;
+    private final int frameWidth;
+    private final int frameHeight;
 
-    public DetectionResult(String gesture, int[] boundingBox) {
+    public DetectionResult(String gesture, int[] boundingBox, double confidence, int frameWidth, int frameHeight) {
         this.gesture = Objects.requireNonNull(gesture, "gesture");
         this.boundingBox = boundingBox == null ? new int[0] : boundingBox.clone();
+        this.confidence = confidence;
+        this.frameWidth = frameWidth;
+        this.frameHeight = frameHeight;
     }
 
     public String getGesture() {
@@ -31,11 +37,26 @@ public final class DetectionResult {
         return boundingBox.length == 4;
     }
 
+    public double getConfidence() {
+        return confidence;
+    }
+
+    public int getFrameWidth() {
+        return frameWidth;
+    }
+
+    public int getFrameHeight() {
+        return frameHeight;
+    }
+
     @Override
     public String toString() {
         return "DetectionResult{" +
             "gesture='" + gesture + '\'' +
             ", boundingBox=" + Arrays.toString(boundingBox) +
+            ", confidence=" + confidence +
+            ", frameWidth=" + frameWidth +
+            ", frameHeight=" + frameHeight +
             '}';
     }
 
@@ -44,13 +65,21 @@ public final class DetectionResult {
         if (this == o) return true;
         if (!(o instanceof DetectionResult)) return false;
         DetectionResult that = (DetectionResult) o;
-        return gesture.equals(that.gesture) && Arrays.equals(boundingBox, that.boundingBox);
+        return gesture.equals(that.gesture)
+            && Double.compare(that.confidence, confidence) == 0
+            && frameWidth == that.frameWidth
+            && frameHeight == that.frameHeight
+            && Arrays.equals(boundingBox, that.boundingBox);
     }
 
     @Override
     public int hashCode() {
         int result = gesture.hashCode();
         result = 31 * result + Arrays.hashCode(boundingBox);
+        long temp = Double.doubleToLongBits(confidence);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + frameWidth;
+        result = 31 * result + frameHeight;
         return result;
     }
 }

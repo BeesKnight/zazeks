@@ -14,6 +14,7 @@ import com.example.zazeks.domain.results.ResultMode
 import com.example.zazeks.infra.ml.GameFrame
 import com.example.zazeks.infra.ml.NeuralModelBridge
 import com.example.zazeks.ui.common.Event
+import com.example.zazeks.ui.offline.BoundingBoxUiModel
 import com.example.zazeks.ui.offline.DetectionUiModel
 import com.example.zazeks.ui.offline.GameResultArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -103,18 +104,23 @@ class OnlineMatchViewModel @Inject constructor(
         if (detectionJob?.isActive == true) return
 
         detectionJob = viewModelScope.launch {
-            updateDetection(detectionState.copy(isProcessing = true, errorMessage = null, errorMessageRes = null))
+            updateDetection(detectionState.copy(isProcessing = true, errorMessage = null, errorMessageRes = null, boundingBox = null, confidence = null))
             try {
                 val result = withContext(ioDispatcher) { neuralModelBridge.detect(frame) }
-                val gesture = normalizeGesture(result.gesture)
+                val gesture = normalizeGesture(result.getGesture())
                 if (gesture != null) {
                     lastValidGesture = gesture
                 }
+                val boundingBox = result.hasDetection()
+                    .takeIf { it }
+                    ?.let { mapBoundingBox(result) }
                 val detection = DetectionUiModel(
                     gesture = gesture ?: detectionState.gesture,
                     isProcessing = false,
                     errorMessage = null,
                     errorMessageRes = null,
+                    boundingBox = boundingBox,
+                    confidence = result.getConfidence().takeIf { it > 0.0 },
                 )
                 updateDetection(detection)
                 repository.sendGesture(gesture, lastValidGesture)
@@ -127,6 +133,8 @@ class OnlineMatchViewModel @Inject constructor(
                         isProcessing = false,
                         errorMessage = throwable.localizedMessage ?: "Не удалось распознать жест",
                         errorMessageRes = null,
+                        boundingBox = null,
+                        confidence = null,
                     )
                 )
             }
@@ -357,6 +365,26 @@ class OnlineMatchViewModel @Inject constructor(
 
     private fun postContent() {
         mutableState.postValue(OnlineMatchViewState.Content(currentSession, detectionState))
+    }
+
+    private fun mapBoundingBox(result: com.example.zazeks.infra.ml.DetectionResult): BoundingBoxUiModel? {
+        val raw = result.getBoundingBox()
+        if (raw.size != 4) return null
+        val width = result.getFrameWidth().takeIf { it > 0 } ?: return null
+        val height = result.getFrameHeight().takeIf { it > 0 } ?: return null
+        val left = raw[0] / width.toFloat()
+        val top = raw[1] / height.toFloat()
+        val right = raw[2] / width.toFloat()
+        val bottom = raw[3] / height.toFloat()
+        val label = normalizeGesture(result.getGesture()) ?: result.getGesture()
+        return BoundingBoxUiModel(
+            left = left,
+            top = top,
+            right = right,
+            bottom = bottom,
+            label = label,
+            confidence = result.getConfidence().takeIf { it > 0.0 }
+        ).clamp()
     }
 
     override fun onCleared() {

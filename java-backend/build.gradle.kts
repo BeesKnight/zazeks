@@ -28,6 +28,7 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.1")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.1")
+    implementation("com.microsoft.onnxruntime:onnxruntime:1.20.0")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

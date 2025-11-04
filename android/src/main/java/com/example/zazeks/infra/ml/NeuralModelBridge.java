@@ -96,15 +96,16 @@ public final class NeuralModelBridge {
             if (body == null) {
                 throw new IOException("Empty response body from model service");
             }
-            return parseResponse(body.string());
+            return parseResponse(body.string(), frame.getWidth(), frame.getHeight());
         }
     }
 
-    private DetectionResult parseResponse(String body) throws IOException {
+    private DetectionResult parseResponse(String body, int frameWidth, int frameHeight) throws IOException {
         try {
             JSONObject json = new JSONObject(body);
             String gesture = json.optString("gesture", "Unknown");
             JSONArray bboxJson = json.optJSONArray("bbox");
+            double confidence = json.optDouble("confidence", 0.0);
 
             int[] bbox = new int[0];
             if (bboxJson != null && bboxJson.length() == 4) {
@@ -113,7 +114,7 @@ public final class NeuralModelBridge {
                     bbox[i] = bboxJson.optInt(i, 0);
                 }
             }
-            return new DetectionResult(gesture, bbox);
+            return new DetectionResult(gesture, bbox, confidence, frameWidth, frameHeight);
         } catch (JSONException e) {
             throw new IOException("Failed to parse model response", e);
         }

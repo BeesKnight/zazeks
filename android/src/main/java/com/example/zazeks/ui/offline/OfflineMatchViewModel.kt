@@ -154,13 +154,18 @@ class OfflineMatchViewModel @Inject constructor(
             )
             try {
                 val result = withContext(ioDispatcher) { neuralModelBridge.detect(frame) }
-                val gesture = normalizeGesture(result.gesture)
+                val gesture = normalizeGesture(result.getGesture())
+                val boundingBox = result.hasDetection()
+                    .takeIf { it }
+                    ?.let { mapBoundingBox(result) }
                 updateDetection(
                     latestDetection.copy(
                         gesture = gesture,
                         isProcessing = false,
                         errorMessage = null,
-                        errorMessageRes = null
+                        errorMessageRes = null,
+                        boundingBox = boundingBox,
+                        confidence = result.getConfidence().takeIf { it > 0.0 }
                     )
                 )
             } catch (ioException: IOException) {
@@ -168,7 +173,9 @@ class OfflineMatchViewModel @Inject constructor(
                     latestDetection.copy(
                         isProcessing = false,
                         errorMessage = ioException.localizedMessage,
-                        errorMessageRes = R.string.offline_detection_error
+                        errorMessageRes = R.string.offline_detection_error,
+                        boundingBox = null,
+                        confidence = null
                     )
                 )
             } catch (throwable: Throwable) {
@@ -176,7 +183,9 @@ class OfflineMatchViewModel @Inject constructor(
                     latestDetection.copy(
                         isProcessing = false,
                         errorMessage = throwable.localizedMessage,
-                        errorMessageRes = R.string.offline_detection_error
+                        errorMessageRes = R.string.offline_detection_error,
+                        boundingBox = null,
+                        confidence = null
                     )
                 )
             }
@@ -215,7 +224,9 @@ class OfflineMatchViewModel @Inject constructor(
             latestDetection.copy(
                 isProcessing = true,
                 errorMessage = null,
-                errorMessageRes = null
+                errorMessageRes = null,
+                boundingBox = null,
+                confidence = null
             )
         )
         viewModelScope.launch {
@@ -250,7 +261,9 @@ class OfflineMatchViewModel @Inject constructor(
                     gesture = snapshot.playerGesture,
                     isProcessing = false,
                     errorMessage = null,
-                    errorMessageRes = null
+                    errorMessageRes = null,
+                    boundingBox = null,
+                    confidence = null
                 )
             )
         } else {
@@ -366,6 +379,26 @@ class OfflineMatchViewModel @Inject constructor(
         latestDetection = detection
         savedStateHandle[SAVED_DETECTION_KEY] = detection
         postContent()
+    }
+
+    private fun mapBoundingBox(result: com.example.zazeks.infra.ml.DetectionResult): BoundingBoxUiModel? {
+        val raw = result.getBoundingBox()
+        if (raw.size != 4) return null
+        val width = result.getFrameWidth().takeIf { it > 0 } ?: return null
+        val height = result.getFrameHeight().takeIf { it > 0 } ?: return null
+        val left = raw[0] / width.toFloat()
+        val top = raw[1] / height.toFloat()
+        val right = raw[2] / width.toFloat()
+        val bottom = raw[3] / height.toFloat()
+        val gestureLabel = normalizeGesture(result.getGesture()) ?: result.getGesture()
+        return BoundingBoxUiModel(
+            left = left,
+            top = top,
+            right = right,
+            bottom = bottom,
+            label = gestureLabel,
+            confidence = result.getConfidence().takeIf { it > 0.0 }
+        ).clamp()
     }
 
     companion object {
