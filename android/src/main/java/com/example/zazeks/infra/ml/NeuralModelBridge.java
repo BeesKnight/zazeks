@@ -14,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -23,11 +24,6 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
-/**
- * Шлюз к HTTP-бэкенду детекции.
- * ВОЗВРАЩАЕТ DetectionResult (как ждут VM после последних изменений).
- * Оставлены статические фабрики remoteHttp(...) для совместимости со старым DI.
- */
 public class NeuralModelBridge {
 
     private static final String TAG = "NN";
@@ -35,13 +31,15 @@ public class NeuralModelBridge {
     private static final String CONFIG_PATH = "config/backend.json";
 
     private final OkHttpClient http;
-    private final String baseUrl; // нормализованный, без завершающего '/'
+    private final String baseUrl;
 
-    // ---- КОНСТРУКТОРЫ ----
-
-    /** Читает baseUrl из assets/config/backend.json */
     public NeuralModelBridge(@NonNull Context appContext) {
-        this.http = new OkHttpClient();
+        this.http = new OkHttpClient.Builder()
+                .connectTimeout(3, TimeUnit.SECONDS)
+                .readTimeout(3, TimeUnit.SECONDS)
+                .writeTimeout(3, TimeUnit.SECONDS)
+                .build();
+
         String url = "http://127.0.0.1:8082";
         try {
             JSONObject cfg = readJsonFromAssets(appContext.getAssets(), CONFIG_PATH);
@@ -50,28 +48,11 @@ public class NeuralModelBridge {
             Log.w(TAG, "backend.json read failed, using default baseUrl: " + url, e);
         }
         this.baseUrl = normalizeUrl(url);
+        Log.i(TAG, "Base URL: " + this.baseUrl);
     }
 
-    /** Новый путь: DI прокидывает client + endpoint вручную */
-    public NeuralModelBridge(@NonNull OkHttpClient client, @NonNull String endpoint) {
-        this.http = client;
-        this.baseUrl = normalizeUrl(endpoint);
-    }
-
-    // ---- СТАТИЧЕСКИЕ ФАБРИКИ (совместимость с прежним кодом) ----
-    public static NeuralModelBridge remoteHttp(@NonNull Context context) {
-        return new NeuralModelBridge(context);
-    }
-
-    public static NeuralModelBridge remoteHttp(@NonNull OkHttpClient client, @NonNull String endpoint) {
-        return new NeuralModelBridge(client, endpoint);
-    }
-
-    // ---- ПУБЛИЧНОЕ API ----
-
-    /** Синхронная детекция. Оборачивайте в корутину/Executor при необходимости. */
     @NonNull
-    public DetectionResult detect(@NonNull GameFrame frame) throws IOException, JSONException {
+    public DetectionResult detect(@NonNull GameFrame frame) throws IOException {
         byte[] jpeg = getBytes(frame);
         if (jpeg == null || jpeg.length == 0) throw new IOException("Empty JPEG bytes");
 
@@ -87,20 +68,38 @@ public class NeuralModelBridge {
                 .build();
 
         try (Response resp = http.newCall(req).execute()) {
-            if (!resp.isSuccessful()) throw new IOException("HTTP " + resp.code() + " " + resp.message());
+            if (!resp.isSuccessful()) {
+                String msg = "HTTP " + resp.code() + " " + resp.message();
+                Log.e(TAG, "detect: " + msg);
+                throw new IOException(msg);
+            }
             try (ResponseBody body = resp.body()) {
                 if (body == null) throw new IOException("Empty body");
                 String raw = body.string();
-
-                // Лог на время отладки (в релизе отключить)
                 Log.d(TAG, "model raw: " + raw);
-
-                return parseResponse(raw, frame.getWidth(), frame.getHeight());
+                try {
+                    return parseResponse(raw, frame.getWidth(), frame.getHeight());
+                } catch (JSONException je) {
+                    Log.e(TAG, "JSON parse error", je);
+                    return fallbackUnknown(frame);
+                }
             }
+        } catch (IOException ioe) {
+            Log.e(TAG, "detect IOException", ioe);
+            return fallbackUnknown(frame);
         }
     }
 
-    // ---- ПАРСИНГ JSON -> DetectionResult ----
+    private DetectionResult fallbackUnknown(@NonNull GameFrame frame) {
+        DetectionResult res = new DetectionResult();
+        res.setGesture("Unknown");
+        res.setConfidence(0.0);
+        res.setLeft(0); res.setTop(0);
+        res.setRight(frame.getWidth()); res.setBottom(frame.getHeight());
+        res.setFrameWidth(frame.getWidth());
+        res.setFrameHeight(frame.getHeight());
+        return res;
+    }
 
     @NonNull
     private DetectionResult parseResponse(@NonNull String json, int frameW, int frameH) throws JSONException {
@@ -150,8 +149,6 @@ public class NeuralModelBridge {
         return res;
     }
 
-    // ---- УТИЛИТЫ ----
-
     private static JSONObject readJsonFromAssets(AssetManager am, String path) throws Exception {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(am.open(path), StandardCharsets.UTF_8))) {
             StringBuilder sb = new StringBuilder();
@@ -173,7 +170,6 @@ public class NeuralModelBridge {
         try { return Double.parseDouble(String.valueOf(o)); } catch (Exception ignore) { return 0.0; }
     }
 
-    /** Универсально достаём JPEG-байты из GameFrame разных реализаций. */
     private static byte[] getBytes(GameFrame frame) {
         try { return (byte[]) GameFrame.class.getMethod("getBytes").invoke(frame); } catch (Throwable ignore) {}
         try { return (byte[]) GameFrame.class.getMethod("getJpeg").invoke(frame); } catch (Throwable ignore) {}

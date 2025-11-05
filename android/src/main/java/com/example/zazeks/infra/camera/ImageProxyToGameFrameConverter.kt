@@ -7,17 +7,15 @@ import com.example.zazeks.infra.ml.GameFrame
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import javax.inject.Inject
-import kotlin.math.abs
 import kotlin.math.min
 
 /**
- * Конвертирует ImageProxy -> JPEG (ByteArray) и УЧИТЫВАЕТ rotationDegrees
- * Возвращает корректные width/height уже после поворота.
+ * Конвертирует ImageProxy -> JPEG с учётом rotationDegrees.
+ * Дополнительно зеркалит по горизонтали (для фронталки) — см. MIRROR_FRONT.
  */
 class ImageProxyToGameFrameConverter @Inject constructor() {
 
     fun convert(image: ImageProxy): GameFrame? {
-        // На большинстве устройств формат YUV_420_888
         return if (image.format == ImageFormat.YUV_420_888) {
             fromYuv420Rotated(image)
         } else {
@@ -25,22 +23,18 @@ class ImageProxyToGameFrameConverter @Inject constructor() {
         }
     }
 
-    // ---------- YUV путь ----------
     private fun fromYuv420Rotated(image: ImageProxy): GameFrame? {
         val nv21 = image.toNv21() ?: return null
 
-        // 1) NV21 -> JPEG (в «сырой» ориентации)
         val yuv = YuvImage(nv21, ImageFormat.NV21, image.width, image.height, null)
         val tmp = ByteArrayOutputStream()
         yuv.compressToJpeg(Rect(0, 0, image.width, image.height), JPEG_QUALITY, tmp)
         val jpegBytes = tmp.toByteArray()
 
-        // 2) JPEG -> Bitmap -> rotate(rotationDegrees)
         val bmp = BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes.size) ?: return null
         val deg = image.imageInfo.rotationDegrees
-        val rotated = if (deg != 0) rotateBitmap(bmp, deg) else bmp
+        val rotated = rotateAndMaybeMirror(bmp, deg)
 
-        // 3) назад в JPEG
         val out = ByteArrayOutputStream()
         rotated.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, out)
         val finalJpeg = out.toByteArray()
@@ -53,7 +47,6 @@ class ImageProxyToGameFrameConverter @Inject constructor() {
         )
     }
 
-    // ---------- RGBA (fallback) ----------
     private fun fromRgbaPlaneRotated(image: ImageProxy): GameFrame? {
         val plane = image.planes.firstOrNull() ?: return null
         val buf = plane.buffer
@@ -63,7 +56,7 @@ class ImageProxyToGameFrameConverter @Inject constructor() {
         bmp.copyPixelsFromBuffer(ByteBuffer.wrap(rgba))
 
         val deg = image.imageInfo.rotationDegrees
-        val rotated = if (deg != 0) rotateBitmap(bmp, deg) else bmp
+        val rotated = rotateAndMaybeMirror(bmp, deg)
 
         val out = ByteArrayOutputStream()
         rotated.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, out)
@@ -75,10 +68,10 @@ class ImageProxyToGameFrameConverter @Inject constructor() {
         )
     }
 
-    private fun rotateBitmap(src: Bitmap, degrees: Int): Bitmap {
-        // Если нужна «зеркалка» для фронталки, раскомментируйте строку scaleX = -1f
+    private fun rotateAndMaybeMirror(src: Bitmap, degrees: Int): Bitmap {
         val m = Matrix().apply {
-            // postScale(-1f, 1f, src.width / 2f, src.height / 2f)  // зеркалка по горизонтали (опционально)
+            // ВКЛ/ВЫКЛ зеркалку для фронталки:
+            if (MIRROR_FRONT) postScale(-1f, 1f, src.width / 2f, src.height / 2f)
             postRotate(degrees.toFloat())
         }
         return Bitmap.createBitmap(src, 0, 0, src.width, src.height, m, true)
@@ -86,12 +79,12 @@ class ImageProxyToGameFrameConverter @Inject constructor() {
 
     companion object {
         private const val JPEG_QUALITY = 85
+        /** Если используешь фронт-камеру — true. Для тыльной поставь false. */
+        private const val MIRROR_FRONT = true
     }
 }
 
-/**
- * Надёжная конвертация YUV_420_888 -> NV21, с учётом rowStride/pixelStride
- */
+/** YUV_420_888 -> NV21 с учётом stride. */
 private fun ImageProxy.toNv21(): ByteArray? {
     val yPlane = planes.getOrNull(0) ?: return null
     val uPlane = planes.getOrNull(1) ?: return null
@@ -101,11 +94,9 @@ private fun ImageProxy.toNv21(): ByteArray? {
     val uSize = uPlane.buffer.remaining()
     val vSize = vPlane.buffer.remaining()
 
-    // Буфер NV21: Y + VU (interleaved)
     val out = ByteArray(width * height + 2 * ((width + 1) / 2) * ((height + 1) / 2))
     var outPos = 0
 
-    // --- Копируем Y построчно (из-за rowStride) ---
     val yRowStride = yPlane.rowStride
     val yPixelStride = yPlane.pixelStride
     val yBuffer = yPlane.buffer
@@ -131,7 +122,6 @@ private fun ImageProxy.toNv21(): ByteArray? {
         }
     }
 
-    // --- Копируем UV, формируя VU под NV21 ---
     val vRowStride = vPlane.rowStride
     val vPixelStride = vPlane.pixelStride
     val uRowStride = uPlane.rowStride
@@ -149,7 +139,6 @@ private fun ImageProxy.toNv21(): ByteArray? {
         var vSrc = vOffset
         var uSrc = uOffset
         for (col in 0 until chromaWidth) {
-            // NV21: V затем U
             out[outPos++] = vBuf.getOrElse(vSrc) { 0 }
             out[outPos++] = uBuf.getOrElse(uSrc) { 0 }
             vSrc += vPixelStride
