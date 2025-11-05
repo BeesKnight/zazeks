@@ -1,85 +1,43 @@
 package com.example.zazeks.infra.ml;
 
-import java.util.Arrays;
-import java.util.Objects;
+public class DetectionResult {
+    private String gesture;     // "Rock" | "Paper" | "Scissors" | "Unknown"
+    private float confidence;   // 0.0..1.0
+    private int left;
+    private int top;
+    private int right;
+    private int bottom;
 
-/**
- * DTO with gesture classification result returned by the Python service.
- */
-public final class DetectionResult {
-    private final String gesture;
-    private final int[] boundingBox;
-    private final double confidence;
-    private final int frameWidth;
-    private final int frameHeight;
+    public DetectionResult() {}
 
-    public DetectionResult(String gesture, int[] boundingBox, double confidence, int frameWidth, int frameHeight) {
-        this.gesture = Objects.requireNonNull(gesture, "gesture");
-        this.boundingBox = boundingBox == null ? new int[0] : boundingBox.clone();
+    public DetectionResult(String gesture, float confidence, int left, int top, int right, int bottom) {
+        this.gesture = gesture;
         this.confidence = confidence;
-        this.frameWidth = frameWidth;
-        this.frameHeight = frameHeight;
+        this.left = left;
+        this.top = top;
+        this.right = right;
+        this.bottom = bottom;
     }
 
-    public String getGesture() {
-        return gesture;
-    }
+    // --- VM дергают именно такие геттеры ---
+    public String getGesture() { return gesture; }
+    public float getConfidence() { return confidence; }
+    public int getLeft() { return left; }
+    public int getTop() { return top; }
+    public int getRight() { return right; }
+    public int getBottom() { return bottom; }
 
-    /**
-     * Bounding box coordinates in the format [x1, y1, x2, y2].
-     * Returns an empty array when the service did not detect a gesture.
-     */
-    public int[] getBoundingBox() {
-        return boundingBox.clone();
-    }
+    public void setGesture(String gesture) { this.gesture = gesture; }
+    public void setConfidence(float confidence) { this.confidence = confidence; }
+    public void setLeft(int left) { this.left = left; }
+    public void setTop(int top) { this.top = top; }
+    public void setRight(int right) { this.right = right; }
+    public void setBottom(int bottom) { this.bottom = bottom; }
 
+    // Часто используется в VM
     public boolean hasDetection() {
-        return boundingBox.length == 4;
-    }
-
-    public double getConfidence() {
-        return confidence;
-    }
-
-    public int getFrameWidth() {
-        return frameWidth;
-    }
-
-    public int getFrameHeight() {
-        return frameHeight;
-    }
-
-    @Override
-    public String toString() {
-        return "DetectionResult{" +
-            "gesture='" + gesture + '\'' +
-            ", boundingBox=" + Arrays.toString(boundingBox) +
-            ", confidence=" + confidence +
-            ", frameWidth=" + frameWidth +
-            ", frameHeight=" + frameHeight +
-            '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof DetectionResult)) return false;
-        DetectionResult that = (DetectionResult) o;
-        return gesture.equals(that.gesture)
-            && Double.compare(that.confidence, confidence) == 0
-            && frameWidth == that.frameWidth
-            && frameHeight == that.frameHeight
-            && Arrays.equals(boundingBox, that.boundingBox);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = gesture.hashCode();
-        result = 31 * result + Arrays.hashCode(boundingBox);
-        long temp = Double.doubleToLongBits(confidence);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        result = 31 * result + frameWidth;
-        result = 31 * result + frameHeight;
-        return result;
+        return gesture != null
+                && !"Unknown".equalsIgnoreCase(gesture)
+                && confidence >= 0.20f; // можно поправить порог
     }
 }

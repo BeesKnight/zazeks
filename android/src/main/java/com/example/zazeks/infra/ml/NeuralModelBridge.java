@@ -11,7 +11,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -19,8 +18,6 @@ import java.nio.charset.StandardCharsets;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import okhttp3.Call;
-import okhttp3.Callback;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -31,7 +28,7 @@ import okhttp3.ResponseBody;
 
 /**
  * Мост между Android-приложением и HTTP-бэкендом детекции жестов.
- * Читает базовый URL из assets/config/backend.json и отправляет JPEG кадры.
+ * Читает baseUrl из assets/config/backend.json и отправляет JPEG кадры.
  */
 @Singleton
 public class NeuralModelBridge {
@@ -46,31 +43,22 @@ public class NeuralModelBridge {
     @Inject
     public NeuralModelBridge(Context appContext) {
         this.http = new OkHttpClient();
-
-        // читаем baseUrl из assets/config/backend.json
-        String url = "http://127.0.0.1:8082"; // дефолт на всякий
+        String url = "http://127.0.0.1:8082"; // дефолт
         try {
             JSONObject cfg = readJsonFromAssets(appContext.getAssets(), CONFIG_PATH);
-            if (cfg != null) {
-                url = cfg.optString("baseUrl", url);
-            }
+            if (cfg != null) url = cfg.optString("baseUrl", url);
         } catch (Exception e) {
             Log.w(TAG, "backend.json read failed, using default baseUrl: " + url, e);
         }
-        this.baseUrl = url;
+        this.baseUrl = normalizeUrl(url);
     }
 
-    // --------- ПУБЛИЧНЫЙ СИНХРОННЫЙ ВАРИАНТ (можете обернуть в корутину/Executor) ---------
-
-    /** Отправляет кадр на /model/detect и возвращает распарсенный результат. */
+    /** Синхронная детекция (оборачивай в корутину/Executor по желанию). */
     @NonNull
-    public ModelResult detect(@NonNull GameFrame frame) throws IOException, JSONException {
+    public DetectionResult detect(@NonNull GameFrame frame) throws IOException, JSONException {
         byte[] jpeg = getBytes(frame);
-        if (jpeg == null || jpeg.length == 0) {
-            throw new IOException("Empty JPEG bytes");
-        }
+        if (jpeg == null || jpeg.length == 0) throw new IOException("Empty JPEG bytes");
 
-        String url = normalizeUrl(baseUrl) + "/model/detect";
         RequestBody filePart = RequestBody.create(jpeg, MEDIA_TYPE_JPEG);
         MultipartBody reqBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
@@ -78,7 +66,7 @@ public class NeuralModelBridge {
                 .build();
 
         Request req = new Request.Builder()
-                .url(url)
+                .url(baseUrl + "/model/detect")
                 .post(reqBody)
                 .build();
 
@@ -90,7 +78,7 @@ public class NeuralModelBridge {
                 if (body == null) throw new IOException("Empty body");
                 String raw = body.string();
 
-                // ЛОГИРУЕМ СЫРОЙ JSON (в релизе можно заглушить)
+                // ЛОГ на время отладки (в релизе отключи)
                 Log.d(TAG, "model raw: " + raw);
 
                 return parseResponse(raw, frame.getWidth(), frame.getHeight());
@@ -98,27 +86,14 @@ public class NeuralModelBridge {
         }
     }
 
-    // --------- УСТОЙЧИВЫЙ ПАРСИНГ ОТВЕТА ---------
-
-    /**
-     * Устойчивый парсер JSON-ответа сервиса.
-     * Ожидаемые поля:
-     *  - gesture: String (может отсутствовать → "Unknown")
-     *  - bbox: [x1, y1, x2, y2] (int/double, абсолютные пиксели ИЛИ нормализованные 0..1)
-     *  - confidence: Number (опционально)
-     */
+    // ---------- Парсер ответа ----------
     @NonNull
-    private ModelResult parseResponse(@NonNull String json, int frameW, int frameH) throws JSONException {
+    private DetectionResult parseResponse(@NonNull String json, int frameW, int frameH) throws JSONException {
         JSONObject obj = new JSONObject(json);
 
-        // 1) Жест
         String gesture = obj.optString("gesture", "Unknown");
-        if (gesture == null || gesture.isEmpty()) gesture = "Unknown";
-
-        // 2) Доверие
         double conf = obj.has("confidence") ? obj.optDouble("confidence", 0.0) : 0.0;
 
-        // 3) BBox
         int left = 0, top = 0, right = frameW, bottom = frameH;
         if (obj.has("bbox")) {
             JSONArray bb = obj.getJSONArray("bbox");
@@ -128,45 +103,37 @@ public class NeuralModelBridge {
                 double x2 = asDouble(bb, 2);
                 double y2 = asDouble(bb, 3);
 
-                // Определяем, нормализованы ли координаты
-                boolean looksNormalized =
-                        (x1 >= 0 && x1 <= 1) &&
-                        (y1 >= 0 && y1 <= 1) &&
-                        (x2 >= 0 && x2 <= 1) &&
-                        (y2 >= 0 && y2 <= 1);
-
-                if (looksNormalized) {
+                boolean normalized = (x1 >= 0 && x1 <= 1) && (y1 >= 0 && y1 <= 1)
+                        && (x2 >= 0 && x2 <= 1) && (y2 >= 0 && y2 <= 1);
+                if (normalized) {
                     x1 *= frameW; x2 *= frameW;
                     y1 *= frameH; y2 *= frameH;
                 }
 
-                // Преобразуем к left/top/right/bottom и clamp
                 double l = Math.min(x1, x2);
                 double r = Math.max(x1, x2);
                 double t = Math.min(y1, y2);
                 double b = Math.max(y1, y2);
 
-                left   = clamp((int) Math.round(l), 0, frameW - 1);
-                right  = clamp((int) Math.round(r), 0, frameW - 1);
-                top    = clamp((int) Math.round(t), 0, frameH - 1);
-                bottom = clamp((int) Math.round(b), 0, frameH - 1);
+                left   = clamp((int)Math.round(l), 0, frameW - 1);
+                right  = clamp((int)Math.round(r), 0, frameW - 1);
+                top    = clamp((int)Math.round(t), 0, frameH - 1);
+                bottom = clamp((int)Math.round(b), 0, frameH - 1);
             }
         }
 
-        // 4) Собираем ваш доменный тип результата
-        ModelResult result = new ModelResult();
-        result.setGesture(gesture);
-        result.setConfidence((float) conf);
-        result.setLeft(left);
-        result.setTop(top);
-        result.setRight(right);
-        result.setBottom(bottom);
-        return result;
+        DetectionResult res = new DetectionResult();
+        res.setGesture(gesture != null && !gesture.isEmpty() ? gesture : "Unknown");
+        res.setConfidence((float) conf);
+        res.setLeft(left);
+        res.setTop(top);
+        res.setRight(right);
+        res.setBottom(bottom);
+        return res;
     }
 
-    // --------- ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ---------
-
-    private static JSONObject readJsonFromAssets(AssetManager am, String path) throws IOException, JSONException {
+    // ---------- Утилиты ----------
+    private static JSONObject readJsonFromAssets(AssetManager am, String path) throws Exception {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(am.open(path), StandardCharsets.UTF_8))) {
             StringBuilder sb = new StringBuilder();
             for (String line; (line = br.readLine()) != null; ) sb.append(line);
@@ -176,13 +143,10 @@ public class NeuralModelBridge {
 
     private static String normalizeUrl(String base) {
         if (base == null || base.isEmpty()) return "http://127.0.0.1:8082";
-        if (base.endsWith("/")) return base.substring(0, base.length() - 1);
-        return base;
+        return base.endsWith("/") ? base.substring(0, base.length() - 1) : base;
     }
 
-    private static int clamp(int v, int lo, int hi) {
-        return Math.max(lo, Math.min(hi, v));
-    }
+    private static int clamp(int v, int lo, int hi) { return Math.max(lo, Math.min(hi, v)); }
 
     private static double asDouble(JSONArray arr, int idx) {
         Object o = arr.opt(idx);
@@ -190,26 +154,12 @@ public class NeuralModelBridge {
         try { return Double.parseDouble(String.valueOf(o)); } catch (Exception ignore) { return 0.0; }
     }
 
-    /**
-     * Универсально достаём байты из GameFrame.
-     * Если у вас метод называется иначе (например, getJpeg() / getData()),
-     * переименуйте вызов ниже.
-     */
+    // Универсально достаём байты из GameFrame (под разные реализации)
     private static byte[] getBytes(GameFrame frame) {
-        try {
-            // чаще всего в data-классе Kotlin будет getBytes()
-            return (byte[]) GameFrame.class.getMethod("getBytes").invoke(frame);
-        } catch (Throwable ignore) { }
-        try {
-            return (byte[]) GameFrame.class.getMethod("getJpeg").invoke(frame);
-        } catch (Throwable ignore) { }
-        try {
-            return (byte[]) GameFrame.class.getMethod("getJpegBytes").invoke(frame);
-        } catch (Throwable ignore) { }
-        // как последний шанс — если поле публичное:
-        try {
-            return (byte[]) GameFrame.class.getField("bytes").get(frame);
-        } catch (Throwable ignore) { }
+        try { return (byte[]) GameFrame.class.getMethod("getBytes").invoke(frame); } catch (Throwable ignore) {}
+        try { return (byte[]) GameFrame.class.getMethod("getJpeg").invoke(frame); } catch (Throwable ignore) {}
+        try { return (byte[]) GameFrame.class.getMethod("getJpegBytes").invoke(frame); } catch (Throwable ignore) {}
+        try { return (byte[]) GameFrame.class.getField("bytes").get(frame); } catch (Throwable ignore) {}
         return null;
     }
 }
