@@ -1,6 +1,10 @@
-app:
-  yolo:
-    weights-path: ${YOLO_WEIGHTS_PATH:../model/learning/runs/detect/train5/weights/best.pt}
-    # Optional: override to point to a specific Python binary for Ultralytics export
-    # python-executable: ${YOLO_PYTHON_BIN:python3}
-    # export-timeout-seconds: ${YOLO_EXPORT_TIMEOUT:180}
+server:
+  port: 8082
+
+ml:
+  base-url: http://localhost:8083   # для докера ниже: http://ml-service:8082
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
