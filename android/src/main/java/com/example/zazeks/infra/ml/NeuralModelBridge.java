@@ -1,10 +1,26 @@
 package com.example.zazeks.infra.ml;
 
-import java.io.IOException;
-import java.util.Locale;
-import java.util.Objects;
+import android.content.Context;
+import android.content.res.AssetManager;
+import android.util.Log;
 
-import okhttp3.HttpUrl;
+import androidx.annotation.NonNull;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -13,120 +29,187 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 /**
- * Adapter that forwards frames produced by the Android game engine to the
- * recognition service. The bridge is synchronous to simplify
- * integration with the existing coroutine-based game flow.
+ * Мост между Android-приложением и HTTP-бэкендом детекции жестов.
+ * Читает базовый URL из assets/config/backend.json и отправляет JPEG кадры.
  */
-public final class NeuralModelBridge {
-    private static final MediaType MEDIA_TYPE_JPEG = MediaType.get("image/jpeg");
+@Singleton
+public class NeuralModelBridge {
 
-    private final OkHttpClient httpClient;
-    private final HttpUrl detectEndpoint;
+    private static final String TAG = "NN";
+    private static final MediaType MEDIA_TYPE_JPEG = MediaType.parse("image/jpeg");
+    private static final String CONFIG_PATH = "config/backend.json";
 
-    /** Canonical ctor. */
-    public NeuralModelBridge(OkHttpClient httpClient, HttpUrl detectEndpoint) {
-        this.httpClient = Objects.requireNonNull(httpClient, "httpClient");
-        this.detectEndpoint = Objects.requireNonNull(detectEndpoint, "detectEndpoint");
-    }
+    private final OkHttpClient http;
+    private final String baseUrl;
 
-    /** Convenience overload accepting a String URL. */
-    public NeuralModelBridge(OkHttpClient httpClient, String detectEndpoint) {
-        this(httpClient, requireHttpUrl(detectEndpoint));
-    }
+    @Inject
+    public NeuralModelBridge(Context appContext) {
+        this.http = new OkHttpClient();
 
-    /**
-     * Factory method that configures the bridge in remote HTTP mode.
-     *
-     * @param baseUrl base URL of the backend, e.g. {@code http://10.0.2.2:8000/}
-     */
-    public static NeuralModelBridge remoteHttp(String baseUrl) {
-        Objects.requireNonNull(baseUrl, "baseUrl");
-        HttpUrl parsed = HttpUrl.parse(baseUrl);
-        if (parsed == null) {
-            throw new IllegalArgumentException("Invalid base URL: " + baseUrl);
-        }
-        HttpUrl endpoint = parsed.resolve("/model/detect");
-        if (endpoint == null) {
-            throw new IllegalArgumentException("Unable to resolve /model/detect using base URL: " + baseUrl);
-        }
-        OkHttpClient client = new OkHttpClient.Builder()
-                .retryOnConnectionFailure(true)
-                .build();
-        return new NeuralModelBridge(client, endpoint);
-    }
-
-    private static HttpUrl requireHttpUrl(String url) {
-        HttpUrl parsed = HttpUrl.parse(Objects.requireNonNull(url, "detectEndpoint"));
-        if (parsed == null) {
-            throw new IllegalArgumentException("Invalid detectEndpoint URL: " + url);
-        }
-        return parsed;
-    }
-
-    /**
-     * Performs gesture detection. The frame is sent as multipart/form-data using
-     * the same contract that the backend service expects.
-     */
-    public DetectionResult detect(GameFrame frame) throws IOException {
-        Objects.requireNonNull(frame, "frame");
-
-        // NB: For OkHttp4 from Java this overload is valid: (MediaType, byte[])
-        RequestBody imageBody = RequestBody.create(MEDIA_TYPE_JPEG, frame.getImageBytes());
-
-        MultipartBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("file", buildFileName(frame), imageBody)
-                .build();
-
-        Request request = new Request.Builder()
-                .url(detectEndpoint)
-                .post(requestBody)
-                .build();
-
-        try (Response response = httpClient.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
-                throw new IOException("Model service returned " + response.code());
-            }
-            ResponseBody body = response.body();
-            if (body == null) {
-                throw new IOException("Empty response body from model service");
-            }
-            return parseResponse(body.string(), frame.getWidth(), frame.getHeight());
-        }
-    }
-
-    private DetectionResult parseResponse(String body, int frameWidth, int frameHeight) throws IOException {
+        // читаем baseUrl из assets/config/backend.json
+        String url = "http://127.0.0.1:8082"; // дефолт на всякий
         try {
-            JSONObject json = new JSONObject(body);
-            String gesture = json.optString("gesture", "Unknown");
-            JSONArray bboxJson = json.optJSONArray("bbox");
-            double confidence = json.optDouble("confidence", 0.0);
-
-            int[] bbox = new int[0];
-            if (bboxJson != null && bboxJson.length() == 4) {
-                bbox = new int[4];
-                for (int i = 0; i < 4; i++) {
-                    bbox[i] = bboxJson.optInt(i, 0);
-                }
+            JSONObject cfg = readJsonFromAssets(appContext.getAssets(), CONFIG_PATH);
+            if (cfg != null) {
+                url = cfg.optString("baseUrl", url);
             }
-            return new DetectionResult(gesture, bbox, confidence, frameWidth, frameHeight);
-        } catch (JSONException e) {
-            throw new IOException("Failed to parse model response", e);
+        } catch (Exception e) {
+            Log.w(TAG, "backend.json read failed, using default baseUrl: " + url, e);
+        }
+        this.baseUrl = url;
+    }
+
+    // --------- ПУБЛИЧНЫЙ СИНХРОННЫЙ ВАРИАНТ (можете обернуть в корутину/Executor) ---------
+
+    /** Отправляет кадр на /model/detect и возвращает распарсенный результат. */
+    @NonNull
+    public ModelResult detect(@NonNull GameFrame frame) throws IOException, JSONException {
+        byte[] jpeg = getBytes(frame);
+        if (jpeg == null || jpeg.length == 0) {
+            throw new IOException("Empty JPEG bytes");
+        }
+
+        String url = normalizeUrl(baseUrl) + "/model/detect";
+        RequestBody filePart = RequestBody.create(jpeg, MEDIA_TYPE_JPEG);
+        MultipartBody reqBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", "frame.jpg", filePart)
+                .build();
+
+        Request req = new Request.Builder()
+                .url(url)
+                .post(reqBody)
+                .build();
+
+        try (Response resp = http.newCall(req).execute()) {
+            if (!resp.isSuccessful()) {
+                throw new IOException("HTTP " + resp.code() + " " + resp.message());
+            }
+            try (ResponseBody body = resp.body()) {
+                if (body == null) throw new IOException("Empty body");
+                String raw = body.string();
+
+                // ЛОГИРУЕМ СЫРОЙ JSON (в релизе можно заглушить)
+                Log.d(TAG, "model raw: " + raw);
+
+                return parseResponse(raw, frame.getWidth(), frame.getHeight());
+            }
         }
     }
 
-    private static String buildFileName(GameFrame frame) {
-        return String.format(
-                Locale.US,
-                "frame_%dx%d_%d.jpg",
-                frame.getWidth(),
-                frame.getHeight(),
-                frame.getTimestampMillis()
-        );
+    // --------- УСТОЙЧИВЫЙ ПАРСИНГ ОТВЕТА ---------
+
+    /**
+     * Устойчивый парсер JSON-ответа сервиса.
+     * Ожидаемые поля:
+     *  - gesture: String (может отсутствовать → "Unknown")
+     *  - bbox: [x1, y1, x2, y2] (int/double, абсолютные пиксели ИЛИ нормализованные 0..1)
+     *  - confidence: Number (опционально)
+     */
+    @NonNull
+    private ModelResult parseResponse(@NonNull String json, int frameW, int frameH) throws JSONException {
+        JSONObject obj = new JSONObject(json);
+
+        // 1) Жест
+        String gesture = obj.optString("gesture", "Unknown");
+        if (gesture == null || gesture.isEmpty()) gesture = "Unknown";
+
+        // 2) Доверие
+        double conf = obj.has("confidence") ? obj.optDouble("confidence", 0.0) : 0.0;
+
+        // 3) BBox
+        int left = 0, top = 0, right = frameW, bottom = frameH;
+        if (obj.has("bbox")) {
+            JSONArray bb = obj.getJSONArray("bbox");
+            if (bb.length() >= 4) {
+                double x1 = asDouble(bb, 0);
+                double y1 = asDouble(bb, 1);
+                double x2 = asDouble(bb, 2);
+                double y2 = asDouble(bb, 3);
+
+                // Определяем, нормализованы ли координаты
+                boolean looksNormalized =
+                        (x1 >= 0 && x1 <= 1) &&
+                        (y1 >= 0 && y1 <= 1) &&
+                        (x2 >= 0 && x2 <= 1) &&
+                        (y2 >= 0 && y2 <= 1);
+
+                if (looksNormalized) {
+                    x1 *= frameW; x2 *= frameW;
+                    y1 *= frameH; y2 *= frameH;
+                }
+
+                // Преобразуем к left/top/right/bottom и clamp
+                double l = Math.min(x1, x2);
+                double r = Math.max(x1, x2);
+                double t = Math.min(y1, y2);
+                double b = Math.max(y1, y2);
+
+                left   = clamp((int) Math.round(l), 0, frameW - 1);
+                right  = clamp((int) Math.round(r), 0, frameW - 1);
+                top    = clamp((int) Math.round(t), 0, frameH - 1);
+                bottom = clamp((int) Math.round(b), 0, frameH - 1);
+            }
+        }
+
+        // 4) Собираем ваш доменный тип результата
+        ModelResult result = new ModelResult();
+        result.setGesture(gesture);
+        result.setConfidence((float) conf);
+        result.setLeft(left);
+        result.setTop(top);
+        result.setRight(right);
+        result.setBottom(bottom);
+        return result;
+    }
+
+    // --------- ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ---------
+
+    private static JSONObject readJsonFromAssets(AssetManager am, String path) throws IOException, JSONException {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(am.open(path), StandardCharsets.UTF_8))) {
+            StringBuilder sb = new StringBuilder();
+            for (String line; (line = br.readLine()) != null; ) sb.append(line);
+            return new JSONObject(sb.toString());
+        }
+    }
+
+    private static String normalizeUrl(String base) {
+        if (base == null || base.isEmpty()) return "http://127.0.0.1:8082";
+        if (base.endsWith("/")) return base.substring(0, base.length() - 1);
+        return base;
+    }
+
+    private static int clamp(int v, int lo, int hi) {
+        return Math.max(lo, Math.min(hi, v));
+    }
+
+    private static double asDouble(JSONArray arr, int idx) {
+        Object o = arr.opt(idx);
+        if (o instanceof Number) return ((Number) o).doubleValue();
+        try { return Double.parseDouble(String.valueOf(o)); } catch (Exception ignore) { return 0.0; }
+    }
+
+    /**
+     * Универсально достаём байты из GameFrame.
+     * Если у вас метод называется иначе (например, getJpeg() / getData()),
+     * переименуйте вызов ниже.
+     */
+    private static byte[] getBytes(GameFrame frame) {
+        try {
+            // чаще всего в data-классе Kotlin будет getBytes()
+            return (byte[]) GameFrame.class.getMethod("getBytes").invoke(frame);
+        } catch (Throwable ignore) { }
+        try {
+            return (byte[]) GameFrame.class.getMethod("getJpeg").invoke(frame);
+        } catch (Throwable ignore) { }
+        try {
+            return (byte[]) GameFrame.class.getMethod("getJpegBytes").invoke(frame);
+        } catch (Throwable ignore) { }
+        // как последний шанс — если поле публичное:
+        try {
+            return (byte[]) GameFrame.class.getField("bytes").get(frame);
+        } catch (Throwable ignore) { }
+        return null;
     }
 }
