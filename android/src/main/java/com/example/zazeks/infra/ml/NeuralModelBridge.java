@@ -15,9 +15,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -27,10 +24,9 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 /**
- * Мост между Android-приложением и HTTP-бэкендом детекции жестов.
- * Читает baseUrl из assets/config/backend.json и отправляет JPEG кадры.
+ * Шлюз к HTTP-бэкенду детекции. Делает JSON -> ModelResult (старый контракт).
+ * Добавлены статические фабрики remoteHttp(...) для совместимости с прежними DI-модулями.
  */
-@Singleton
 public class NeuralModelBridge {
 
     private static final String TAG = "NN";
@@ -38,12 +34,13 @@ public class NeuralModelBridge {
     private static final String CONFIG_PATH = "config/backend.json";
 
     private final OkHttpClient http;
-    private final String baseUrl;
+    private final String baseUrl; // нормализованный, без завершающего '/'
 
-    @Inject
-    public NeuralModelBridge(Context appContext) {
+    // ---- КОНСТРУКТОРЫ ----
+    /** Старый путь: читать baseUrl из assets/config/backend.json */
+    public NeuralModelBridge(@NonNull Context appContext) {
         this.http = new OkHttpClient();
-        String url = "http://127.0.0.1:8082"; // дефолт
+        String url = "http://127.0.0.1:8082";
         try {
             JSONObject cfg = readJsonFromAssets(appContext.getAssets(), CONFIG_PATH);
             if (cfg != null) url = cfg.optString("baseUrl", url);
@@ -53,9 +50,25 @@ public class NeuralModelBridge {
         this.baseUrl = normalizeUrl(url);
     }
 
-    /** Синхронная детекция (оборачивай в корутину/Executor по желанию). */
+    /** Новый путь: DI прокидывает client + endpoint */
+    public NeuralModelBridge(@NonNull OkHttpClient client, @NonNull String endpoint) {
+        this.http = client;
+        this.baseUrl = normalizeUrl(endpoint);
+    }
+
+    // ---- СТАТИЧЕСКИЕ ФАБРИКИ (совместимость с remoteHttp(...)) ----
+    public static NeuralModelBridge remoteHttp(@NonNull Context context) {
+        return new NeuralModelBridge(context);
+    }
+
+    public static NeuralModelBridge remoteHttp(@NonNull OkHttpClient client, @NonNull String endpoint) {
+        return new NeuralModelBridge(client, endpoint);
+    }
+
+    // ---- ПУБЛИЧНОЕ API, которое ждут VM ----
+    /** Синхронная детекция. Оборачивай в корутину/Executor при необходимости. */
     @NonNull
-    public DetectionResult detect(@NonNull GameFrame frame) throws IOException, JSONException {
+    public ModelResult detect(@NonNull GameFrame frame) throws IOException, JSONException {
         byte[] jpeg = getBytes(frame);
         if (jpeg == null || jpeg.length == 0) throw new IOException("Empty JPEG bytes");
 
@@ -71,28 +84,26 @@ public class NeuralModelBridge {
                 .build();
 
         try (Response resp = http.newCall(req).execute()) {
-            if (!resp.isSuccessful()) {
-                throw new IOException("HTTP " + resp.code() + " " + resp.message());
-            }
+            if (!resp.isSuccessful()) throw new IOException("HTTP " + resp.code() + " " + resp.message());
             try (ResponseBody body = resp.body()) {
                 if (body == null) throw new IOException("Empty body");
                 String raw = body.string();
 
-                // ЛОГ на время отладки (в релизе отключи)
+                // Лог на время отладки (в релизе удалить/заглушить)
                 Log.d(TAG, "model raw: " + raw);
 
-                return parseResponse(raw, frame.getWidth(), frame.getHeight());
+                return parseResponseToModelResult(raw, frame.getWidth(), frame.getHeight());
             }
         }
     }
 
-    // ---------- Парсер ответа ----------
+    // ---- ПАРСИНГ В СТАРЫЙ КОНТРАКТ ----
     @NonNull
-    private DetectionResult parseResponse(@NonNull String json, int frameW, int frameH) throws JSONException {
+    private ModelResult parseResponseToModelResult(@NonNull String json, int frameW, int frameH) throws JSONException {
         JSONObject obj = new JSONObject(json);
 
         String gesture = obj.optString("gesture", "Unknown");
-        double conf = obj.has("confidence") ? obj.optDouble("confidence", 0.0) : 0.0;
+        Double confidence = obj.has("confidence") ? obj.optDouble("confidence") : null;
 
         int left = 0, top = 0, right = frameW, bottom = frameH;
         if (obj.has("bbox")) {
@@ -105,6 +116,7 @@ public class NeuralModelBridge {
 
                 boolean normalized = (x1 >= 0 && x1 <= 1) && (y1 >= 0 && y1 <= 1)
                         && (x2 >= 0 && x2 <= 1) && (y2 >= 0 && y2 <= 1);
+
                 if (normalized) {
                     x1 *= frameW; x2 *= frameW;
                     y1 *= frameH; y2 *= frameH;
@@ -122,17 +134,19 @@ public class NeuralModelBridge {
             }
         }
 
-        DetectionResult res = new DetectionResult();
-        res.setGesture(gesture != null && !gesture.isEmpty() ? gesture : "Unknown");
-        res.setConfidence((float) conf);
+        ModelResult res = new ModelResult();
+        res.setGesture((gesture == null || gesture.isEmpty()) ? "Unknown" : gesture);
+        res.setConfidence(confidence); // Double? — закроет "Float? ожидается Double?"
         res.setLeft(left);
         res.setTop(top);
         res.setRight(right);
         res.setBottom(bottom);
+        res.setFrameWidth(frameW);
+        res.setFrameHeight(frameH);
         return res;
     }
 
-    // ---------- Утилиты ----------
+    // ---- УТИЛИТЫ ----
     private static JSONObject readJsonFromAssets(AssetManager am, String path) throws Exception {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(am.open(path), StandardCharsets.UTF_8))) {
             StringBuilder sb = new StringBuilder();
@@ -154,7 +168,7 @@ public class NeuralModelBridge {
         try { return Double.parseDouble(String.valueOf(o)); } catch (Exception ignore) { return 0.0; }
     }
 
-    // Универсально достаём байты из GameFrame (под разные реализации)
+    /** Универсально достаём JPEG-байты из GameFrame разных реализаций. */
     private static byte[] getBytes(GameFrame frame) {
         try { return (byte[]) GameFrame.class.getMethod("getBytes").invoke(frame); } catch (Throwable ignore) {}
         try { return (byte[]) GameFrame.class.getMethod("getJpeg").invoke(frame); } catch (Throwable ignore) {}
