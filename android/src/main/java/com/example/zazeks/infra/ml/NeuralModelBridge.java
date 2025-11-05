@@ -24,8 +24,9 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 /**
- * Шлюз к HTTP-бэкенду детекции. Делает JSON -> ModelResult (старый контракт).
- * Добавлены статические фабрики remoteHttp(...) для совместимости с прежними DI-модулями.
+ * Шлюз к HTTP-бэкенду детекции.
+ * ВОЗВРАЩАЕТ DetectionResult (как ждут VM после последних изменений).
+ * Оставлены статические фабрики remoteHttp(...) для совместимости со старым DI.
  */
 public class NeuralModelBridge {
 
@@ -37,7 +38,8 @@ public class NeuralModelBridge {
     private final String baseUrl; // нормализованный, без завершающего '/'
 
     // ---- КОНСТРУКТОРЫ ----
-    /** Старый путь: читать baseUrl из assets/config/backend.json */
+
+    /** Читает baseUrl из assets/config/backend.json */
     public NeuralModelBridge(@NonNull Context appContext) {
         this.http = new OkHttpClient();
         String url = "http://127.0.0.1:8082";
@@ -50,13 +52,13 @@ public class NeuralModelBridge {
         this.baseUrl = normalizeUrl(url);
     }
 
-    /** Новый путь: DI прокидывает client + endpoint */
+    /** Новый путь: DI прокидывает client + endpoint вручную */
     public NeuralModelBridge(@NonNull OkHttpClient client, @NonNull String endpoint) {
         this.http = client;
         this.baseUrl = normalizeUrl(endpoint);
     }
 
-    // ---- СТАТИЧЕСКИЕ ФАБРИКИ (совместимость с remoteHttp(...)) ----
+    // ---- СТАТИЧЕСКИЕ ФАБРИКИ (совместимость с прежним кодом) ----
     public static NeuralModelBridge remoteHttp(@NonNull Context context) {
         return new NeuralModelBridge(context);
     }
@@ -65,10 +67,11 @@ public class NeuralModelBridge {
         return new NeuralModelBridge(client, endpoint);
     }
 
-    // ---- ПУБЛИЧНОЕ API, которое ждут VM ----
-    /** Синхронная детекция. Оборачивай в корутину/Executor при необходимости. */
+    // ---- ПУБЛИЧНОЕ API ----
+
+    /** Синхронная детекция. Оборачивайте в корутину/Executor при необходимости. */
     @NonNull
-    public ModelResult detect(@NonNull GameFrame frame) throws IOException, JSONException {
+    public DetectionResult detect(@NonNull GameFrame frame) throws IOException, JSONException {
         byte[] jpeg = getBytes(frame);
         if (jpeg == null || jpeg.length == 0) throw new IOException("Empty JPEG bytes");
 
@@ -89,17 +92,18 @@ public class NeuralModelBridge {
                 if (body == null) throw new IOException("Empty body");
                 String raw = body.string();
 
-                // Лог на время отладки (в релизе удалить/заглушить)
+                // Лог на время отладки (в релизе отключить)
                 Log.d(TAG, "model raw: " + raw);
 
-                return parseResponseToModelResult(raw, frame.getWidth(), frame.getHeight());
+                return parseResponse(raw, frame.getWidth(), frame.getHeight());
             }
         }
     }
 
-    // ---- ПАРСИНГ В СТАРЫЙ КОНТРАКТ ----
+    // ---- ПАРСИНГ JSON -> DetectionResult ----
+
     @NonNull
-    private ModelResult parseResponseToModelResult(@NonNull String json, int frameW, int frameH) throws JSONException {
+    private DetectionResult parseResponse(@NonNull String json, int frameW, int frameH) throws JSONException {
         JSONObject obj = new JSONObject(json);
 
         String gesture = obj.optString("gesture", "Unknown");
@@ -115,7 +119,7 @@ public class NeuralModelBridge {
                 double y2 = asDouble(bb, 3);
 
                 boolean normalized = (x1 >= 0 && x1 <= 1) && (y1 >= 0 && y1 <= 1)
-                        && (x2 >= 0 && x2 <= 1) && (y2 >= 0 && y2 <= 1);
+                                  && (x2 >= 0 && x2 <= 1) && (y2 >= 0 && y2 <= 1);
 
                 if (normalized) {
                     x1 *= frameW; x2 *= frameW;
@@ -134,9 +138,9 @@ public class NeuralModelBridge {
             }
         }
 
-        ModelResult res = new ModelResult();
+        DetectionResult res = new DetectionResult();
         res.setGesture((gesture == null || gesture.isEmpty()) ? "Unknown" : gesture);
-        res.setConfidence(confidence); // Double? — закроет "Float? ожидается Double?"
+        res.setConfidence(confidence);
         res.setLeft(left);
         res.setTop(top);
         res.setRight(right);
@@ -147,6 +151,7 @@ public class NeuralModelBridge {
     }
 
     // ---- УТИЛИТЫ ----
+
     private static JSONObject readJsonFromAssets(AssetManager am, String path) throws Exception {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(am.open(path), StandardCharsets.UTF_8))) {
             StringBuilder sb = new StringBuilder();
