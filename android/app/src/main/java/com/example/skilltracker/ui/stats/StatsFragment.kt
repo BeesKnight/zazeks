@@ -5,8 +5,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.skilltracker.R
 import com.example.skilltracker.databinding.FragmentStatsBinding
@@ -16,7 +18,13 @@ class StatsFragment : Fragment() {
     private var _binding: FragmentStatsBinding? = null
     private val binding get() = _binding!!
     private val viewModel: StatsViewModel by viewModels()
-    private val adapter = StatsAdapter()
+    private val adapter = StatsAdapter { stat ->
+        val args = bundleOf(
+            "skillId" to stat.skillId,
+            "skillName" to stat.skillName
+        )
+        findNavController().navigate(R.id.action_statsFragment_to_skillDetailsFragment, args)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

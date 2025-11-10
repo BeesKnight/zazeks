@@ -25,7 +25,7 @@ public class SessionService {
         SkillEntity skill = skillService.findSkill(request.skillId());
         SessionEntity entity = new SessionEntity();
         entity.setSkill(skill);
-        entity.setSessionDate(request.sessionDate());
+        entity.setSessionDate(resolveSessionDate(request.sessionDate()));
         entity.setDurationMinutes(request.durationMinutes());
         entity.setNotes(request.notes());
         entity.setDifficulty(request.difficulty());
@@ -51,12 +51,38 @@ public class SessionService {
 
     @Transactional(readOnly = true)
     public SessionDto getSession(Long id) {
-        return SessionMapper.toDto(sessionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Session %d not found".formatted(id))));
+        return SessionMapper.toDto(findSession(id));
+    }
+
+    public SessionDto updateSession(Long id, UpdateSessionRequest request) {
+        SessionEntity entity = findSession(id);
+        SkillEntity skill = skillService.findSkill(request.skillId());
+        entity.setSkill(skill);
+        entity.setSessionDate(resolveSessionDate(request.sessionDate()));
+        entity.setDurationMinutes(request.durationMinutes());
+        entity.setNotes(request.notes());
+        entity.setDifficulty(request.difficulty());
+        entity.setSource(request.source());
+        SessionEntity saved = sessionRepository.save(entity);
+        return SessionMapper.toDto(saved);
+    }
+
+    public void deleteSession(Long id) {
+        SessionEntity entity = findSession(id);
+        sessionRepository.delete(entity);
     }
 
     @Transactional(readOnly = true)
     public List<SessionDto> getAll() {
         return getSessions(null, null, null);
+    }
+
+    private SessionEntity findSession(Long id) {
+        return sessionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Session %d not found".formatted(id)));
+    }
+
+    private Instant resolveSessionDate(Instant provided) {
+        return provided != null ? provided : Instant.now();
     }
 }

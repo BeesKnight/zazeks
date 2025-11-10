@@ -10,7 +10,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.skilltracker.R
 import com.example.skilltracker.domain.model.Skill
 
-class SkillsAdapter : RecyclerView.Adapter<SkillsAdapter.SkillViewHolder>() {
+class SkillsAdapter(
+    private val onSkillClick: (Skill) -> Unit
+) : RecyclerView.Adapter<SkillsAdapter.SkillViewHolder>() {
 
     private val items = mutableListOf<Skill>()
 
@@ -22,7 +24,7 @@ class SkillsAdapter : RecyclerView.Adapter<SkillsAdapter.SkillViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SkillViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_skill, parent, false)
-        return SkillViewHolder(view)
+        return SkillViewHolder(view, onSkillClick)
     }
 
     override fun getItemCount(): Int = items.size
@@ -31,7 +33,10 @@ class SkillsAdapter : RecyclerView.Adapter<SkillsAdapter.SkillViewHolder>() {
         holder.bind(items[position])
     }
 
-    class SkillViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class SkillViewHolder(
+        itemView: View,
+        private val onSkillClick: (Skill) -> Unit
+    ) : RecyclerView.ViewHolder(itemView) {
         private val title: TextView = itemView.findViewById(R.id.skillTitle)
         private val description: TextView = itemView.findViewById(R.id.skillDescription)
         private val category: TextView = itemView.findViewById(R.id.skillCategory)
@@ -57,6 +62,7 @@ class SkillsAdapter : RecyclerView.Adapter<SkillsAdapter.SkillViewHolder>() {
             colorIndicator.setBackgroundColor(parsedColor ?: defaultColor)
             val alpha = if (skill.archived) 0.5f else 1f
             itemView.alpha = alpha
+            itemView.setOnClickListener { onSkillClick(skill) }
         }
     }
 }

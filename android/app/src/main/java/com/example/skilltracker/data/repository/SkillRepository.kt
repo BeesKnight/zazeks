@@ -11,7 +11,12 @@ class SkillRepository {
 
     suspend fun getSkills(includeArchived: Boolean = false): List<Skill> {
         val include = if (includeArchived) true else null
-        return api.getSkills(include).map { it.toDomain() }
+        return api.getSkills(include).map(SkillDto::toDomain)
+    }
+
+    suspend fun getSkill(id: Long): Skill {
+        val dto = api.getSkill(id)
+        return dto.toDomain()
     }
 
     suspend fun createSkill(name: String, description: String?, category: String?, color: String?): Skill {
@@ -21,13 +26,12 @@ class SkillRepository {
 
     suspend fun updateSkill(
         id: Long,
-        name: String?,
+        name: String,
         description: String?,
         category: String?,
-        color: String?,
-        archived: Boolean?
+        color: String?
     ): Skill {
-        val request = UpdateSkillRequest(name, description, category, color, archived)
+        val request = UpdateSkillRequest(name, description, category, color, null)
         val dto = api.updateSkill(id, request)
         return dto.toDomain()
     }

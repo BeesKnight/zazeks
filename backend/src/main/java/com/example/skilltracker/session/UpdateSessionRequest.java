@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.Instant;
 
-public record CreateSessionRequest(@NotNull(message = "Skill id is required") Long skillId,
+public record UpdateSessionRequest(@NotNull(message = "Skill id is required") Long skillId,
                                    Instant sessionDate,
                                    @Min(value = 1, message = "Duration should be at least 1") int durationMinutes,
                                    String notes,
