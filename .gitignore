@@ -1,0 +1,11 @@
+# Root ignores
+.DS_Store
+*.iml
+.idea/
+.gradle/
+build/
+out/
+!gradle/wrapper/gradle-wrapper.jar
+**/local.properties
+**/.cxx/
+**/.DS_Store
