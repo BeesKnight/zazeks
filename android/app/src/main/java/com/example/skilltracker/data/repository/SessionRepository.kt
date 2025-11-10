@@ -8,18 +8,47 @@ import java.time.Instant
 class SessionRepository {
     private val api = ApiClient.sessionApi
 
-    suspend fun getSessions(): List<Session> = api.getSessions().map { dto ->
-        Session(dto.id, dto.skillId, dto.sessionDate, dto.durationMinutes, dto.notes)
+    suspend fun getSessions(
+        skillId: Long? = null,
+        from: String? = null,
+        to: String? = null
+    ): List<Session> = api.getSessions(skillId, from, to).map { dto ->
+        Session(
+            id = dto.id,
+            skillId = dto.skillId,
+            sessionDate = dto.sessionDate,
+            durationMinutes = dto.durationMinutes,
+            notes = dto.notes,
+            difficulty = dto.difficulty,
+            source = dto.source
+        )
     }
 
-    suspend fun createSession(skillId: Long, durationMinutes: Int, notes: String?): Session {
+    suspend fun createSession(
+        skillId: Long,
+        durationMinutes: Int,
+        notes: String?,
+        difficulty: Int?,
+        source: String?,
+        sessionDate: String? = null
+    ): Session {
         val request = CreateSessionRequest(
             skillId = skillId,
-            sessionDate = Instant.now().toString(),
+            sessionDate = sessionDate ?: Instant.now().toString(),
             durationMinutes = durationMinutes,
-            notes = notes
+            notes = notes,
+            difficulty = difficulty,
+            source = source
         )
         val dto = api.createSession(request)
-        return Session(dto.id, dto.skillId, dto.sessionDate, dto.durationMinutes, dto.notes)
+        return Session(
+            id = dto.id,
+            skillId = dto.skillId,
+            sessionDate = dto.sessionDate,
+            durationMinutes = dto.durationMinutes,
+            notes = dto.notes,
+            difficulty = dto.difficulty,
+            source = dto.source
+        )
     }
 }

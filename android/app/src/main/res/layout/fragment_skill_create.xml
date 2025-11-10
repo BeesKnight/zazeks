@@ -13,20 +13,35 @@
             android:id="@+id/skillNameInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Skill name" />
+            android:hint="@string/skill_name_hint" />
 
         <EditText
             android:id="@+id/skillDescriptionInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Description"
+            android:hint="@string/skill_description_hint"
             android:layout_marginTop="8dp" />
+
+        <EditText
+            android:id="@+id/skillCategoryInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/skill_category_hint"
+            android:layout_marginTop="8dp" />
+
+        <EditText
+            android:id="@+id/skillColorInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/skill_color_hint"
+            android:layout_marginTop="8dp"
+            android:inputType="text" />
 
         <Button
             android:id="@+id/saveSkillButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Save"
+            android:text="@string/save"
             android:layout_marginTop="16dp" />
     </LinearLayout>
 </ScrollView>

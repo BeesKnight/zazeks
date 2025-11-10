@@ -37,6 +37,10 @@ public class SessionEntity {
 
     private String notes;
 
+    private Integer difficulty;
+
+    private String source;
+
     public Long getId() {
         return id;
     }
@@ -75,5 +79,21 @@ public class SessionEntity {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public Integer getDifficulty() {
+        return difficulty;
+    }
+
+    public void setDifficulty(Integer difficulty) {
+        this.difficulty = difficulty;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 }

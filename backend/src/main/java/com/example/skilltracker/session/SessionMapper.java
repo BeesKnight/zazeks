@@ -6,6 +6,14 @@ public class SessionMapper {
     }
 
     public static SessionDto toDto(SessionEntity entity) {
-        return new SessionDto(entity.getId(), entity.getSkill().getId(), entity.getSessionDate(), entity.getDurationMinutes(), entity.getNotes());
+        return new SessionDto(
+                entity.getId(),
+                entity.getSkill().getId(),
+                entity.getSessionDate(),
+                entity.getDurationMinutes(),
+                entity.getNotes(),
+                entity.getDifficulty(),
+                entity.getSource()
+        );
     }
 }

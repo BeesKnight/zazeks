@@ -5,10 +5,13 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skilltracker.data.repository.SessionRepository
+import com.example.skilltracker.data.repository.SkillRepository
+import com.example.skilltracker.domain.model.Skill
 import kotlinx.coroutines.launch
 
 class SessionCreateViewModel(
-    private val repository: SessionRepository = SessionRepository()
+    private val sessionRepository: SessionRepository = SessionRepository(),
+    private val skillRepository: SkillRepository = SkillRepository()
 ) : ViewModel() {
 
     private val _isSaving = MutableLiveData(false)
@@ -17,10 +20,35 @@ class SessionCreateViewModel(
     private val _isSuccess = MutableLiveData<Boolean?>(null)
     val isSuccess: LiveData<Boolean?> = _isSuccess
 
-    fun createSession(skillId: Long, durationMinutes: Int, notes: String?) {
+    private val _skills = MutableLiveData<List<Skill>>(emptyList())
+    val skills: LiveData<List<Skill>> = _skills
+
+    init {
+        loadSkills()
+    }
+
+    fun loadSkills() {
+        viewModelScope.launch {
+            runCatching { skillRepository.getSkills() }
+                .onSuccess { _skills.value = it }
+                .onFailure { _skills.value = emptyList() }
+        }
+    }
+
+    fun createSession(
+        skillId: Long,
+        durationMinutes: Int,
+        notes: String?,
+        difficulty: Int?,
+        source: String?
+    ) {
         viewModelScope.launch {
             _isSaving.value = true
-            runCatching { repository.createSession(skillId, durationMinutes, notes) }
+            val notesValue = notes?.takeIf { it.isNotBlank() }
+            val sourceValue = source?.takeIf { it.isNotBlank() }
+            runCatching {
+                sessionRepository.createSession(skillId, durationMinutes, notesValue, difficulty, sourceValue)
+            }
                 .onSuccess { _isSuccess.value = true }
                 .onFailure { _isSuccess.value = false }
             _isSaving.value = false

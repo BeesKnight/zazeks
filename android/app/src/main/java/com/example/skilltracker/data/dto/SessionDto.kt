@@ -5,5 +5,7 @@ data class SessionDto(
     val skillId: Long,
     val sessionDate: String,
     val durationMinutes: Int,
-    val notes: String?
+    val notes: String?,
+    val difficulty: Int?,
+    val source: String?
 )

@@ -18,17 +18,24 @@ class SkillsListViewModel(
     private val _isLoading = MutableLiveData(false)
     val isLoading: LiveData<Boolean> = _isLoading
 
+    private var includeArchived: Boolean = false
+
     init {
         loadSkills()
     }
 
-    fun loadSkills() {
+    fun loadSkills(includeArchived: Boolean = this.includeArchived) {
+        this.includeArchived = includeArchived
         viewModelScope.launch {
             _isLoading.value = true
-            runCatching { repository.getSkills() }
+            runCatching { repository.getSkills(includeArchived) }
                 .onSuccess { _skills.value = it }
                 .onFailure { _skills.value = emptyList() }
             _isLoading.value = false
         }
+    }
+
+    fun toggleIncludeArchived(include: Boolean) {
+        loadSkills(include)
     }
 }

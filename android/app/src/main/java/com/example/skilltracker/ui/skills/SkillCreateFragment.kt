@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.example.skilltracker.R
 import com.example.skilltracker.databinding.FragmentSkillCreateBinding
 
 class SkillCreateFragment : Fragment() {
@@ -30,22 +31,32 @@ class SkillCreateFragment : Fragment() {
         binding.saveSkillButton.setOnClickListener {
             val name = binding.skillNameInput.text?.toString().orEmpty()
             val description = binding.skillDescriptionInput.text?.toString()
-            viewModel.createSkill(name, description)
+            val category = binding.skillCategoryInput.text?.toString()
+            val color = binding.skillColorInput.text?.toString()
+            viewModel.createSkill(name, description, category, color)
         }
 
         viewModel.isSuccess.observe(viewLifecycleOwner) { isSuccess ->
             when (isSuccess) {
                 true -> {
-                    Toast.makeText(requireContext(), "Skill created", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), R.string.skill_created, Toast.LENGTH_SHORT).show()
+                    clearInputs()
                     viewModel.resetState()
                 }
                 false -> {
-                    Toast.makeText(requireContext(), "Failed to create skill", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), R.string.skill_create_failed, Toast.LENGTH_SHORT).show()
                     viewModel.resetState()
                 }
                 null -> Unit
             }
         }
+    }
+
+    private fun clearInputs() {
+        binding.skillNameInput.text?.clear()
+        binding.skillDescriptionInput.text?.clear()
+        binding.skillCategoryInput.text?.clear()
+        binding.skillColorInput.text?.clear()
     }
 
     override fun onDestroyView() {

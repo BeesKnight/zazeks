@@ -24,6 +24,13 @@ public class SkillEntity {
 
     private String description;
 
+    private String category;
+
+    private String color;
+
+    @Column(nullable = false)
+    private boolean archived = false;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -49,6 +56,30 @@ public class SkillEntity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public boolean isArchived() {
+        return archived;
+    }
+
+    public void setArchived(boolean archived) {
+        this.archived = archived;
     }
 
     public Instant getCreatedAt() {
