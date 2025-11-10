@@ -1,5 +1,7 @@
 package com.example.skilltracker.ui.sessions
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,6 +15,11 @@ import androidx.fragment.app.viewModels
 import com.example.skilltracker.R
 import com.example.skilltracker.databinding.FragmentSessionCreateBinding
 import com.example.skilltracker.domain.model.Skill
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 class SessionCreateFragment : Fragment() {
 
@@ -22,6 +29,8 @@ class SessionCreateFragment : Fragment() {
     private var selectedSkill: Skill? = null
     private var selectedSource: String? = null
     private var difficultySelected = false
+    private var selectedDate: LocalDate? = null
+    private var selectedTime: LocalTime? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,16 +46,18 @@ class SessionCreateFragment : Fragment() {
 
         setupSourceSpinner()
         setupDifficultySeekBar()
+        setupDateTimePickers()
 
         binding.saveSessionButton.setOnClickListener {
             val skillId = selectedSkill?.id
             val duration = binding.sessionDurationInput.text?.toString()?.toIntOrNull()
-            val notes = binding.sessionNotesInput.text?.toString()
+            val notes = binding.sessionNotesInput.text?.toString()?.trim()
             val difficulty = if (difficultySelected) binding.sessionDifficultySeekBar.progress + 1 else null
             val source = selectedSource
+            val sessionDate = buildSessionInstant()
 
             if (skillId != null && duration != null && duration > 0) {
-                viewModel.createSession(skillId, duration, notes, difficulty, source)
+                viewModel.createSession(skillId, duration, notes, difficulty, source, sessionDate)
             } else {
                 Toast.makeText(requireContext(), R.string.session_input_error, Toast.LENGTH_SHORT).show()
             }
@@ -70,6 +81,69 @@ class SessionCreateFragment : Fragment() {
                 null -> Unit
             }
         }
+    }
+
+    private fun setupDateTimePickers() {
+        binding.selectSessionDateButton.setOnClickListener {
+            val now = LocalDate.now()
+            DatePickerDialog(
+                requireContext(),
+                { _, year, month, dayOfMonth ->
+                    selectedDate = LocalDate.of(year, month + 1, dayOfMonth)
+                    updateDateTimeText()
+                },
+                now.year,
+                now.monthValue - 1,
+                now.dayOfMonth
+            ).show()
+        }
+
+        binding.selectSessionTimeButton.setOnClickListener {
+            val now = LocalTime.now()
+            TimePickerDialog(
+                requireContext(),
+                { _, hourOfDay, minute ->
+                    selectedTime = LocalTime.of(hourOfDay, minute)
+                    updateDateTimeText()
+                },
+                now.hour,
+                now.minute,
+                true
+            ).show()
+        }
+
+        binding.clearSessionDateButton.setOnClickListener {
+            selectedDate = null
+            selectedTime = null
+            updateDateTimeText()
+        }
+
+        updateDateTimeText()
+    }
+
+    private fun buildSessionInstant(): Instant? {
+        val date = selectedDate
+        val time = selectedTime
+        return if (date != null && time != null) {
+            date.atTime(time).atZone(ZoneId.systemDefault()).toInstant()
+        } else if (date != null) {
+            date.atStartOfDay(ZoneId.systemDefault()).toInstant()
+        } else {
+            null
+        }
+    }
+
+    private fun updateDateTimeText() {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+        val displayText = when {
+            selectedDate == null -> getString(R.string.session_date_placeholder)
+            selectedTime == null -> getString(
+                R.string.session_date_selected_date,
+                selectedDate.toString()
+            )
+            else -> formatter.format(selectedDate!!.atTime(selectedTime))
+        }
+        binding.sessionDateValue.text = displayText
     }
 
     private fun setupSourceSpinner() {
@@ -154,6 +228,9 @@ class SessionCreateFragment : Fragment() {
         binding.sessionDifficultySeekBar.progress = 2
         binding.sessionDifficultyValue.text = getString(R.string.session_difficulty_placeholder)
         selectedSource = null
+        selectedDate = null
+        selectedTime = null
+        updateDateTimeText()
     }
 
     override fun onDestroyView() {

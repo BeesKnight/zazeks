@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.skilltracker.data.repository.SessionRepository
 import com.example.skilltracker.data.repository.SkillRepository
 import com.example.skilltracker.domain.model.Skill
+import java.time.Instant
 import kotlinx.coroutines.launch
 
 class SessionCreateViewModel(
@@ -40,14 +41,22 @@ class SessionCreateViewModel(
         durationMinutes: Int,
         notes: String?,
         difficulty: Int?,
-        source: String?
+        source: String?,
+        sessionDate: Instant?
     ) {
         viewModelScope.launch {
             _isSaving.value = true
             val notesValue = notes?.takeIf { it.isNotBlank() }
             val sourceValue = source?.takeIf { it.isNotBlank() }
             runCatching {
-                sessionRepository.createSession(skillId, durationMinutes, notesValue, difficulty, sourceValue)
+                sessionRepository.createSession(
+                    skillId = skillId,
+                    durationMinutes = durationMinutes,
+                    notes = notesValue,
+                    difficulty = difficulty,
+                    source = sourceValue,
+                    sessionDate = sessionDate
+                )
             }
                 .onSuccess { _isSuccess.value = true }
                 .onFailure { _isSuccess.value = false }

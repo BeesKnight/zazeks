@@ -8,7 +8,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.skilltracker.R
 import com.example.skilltracker.domain.model.SkillStats
 
-class StatsAdapter : RecyclerView.Adapter<StatsAdapter.StatsViewHolder>() {
+class StatsAdapter(
+    private val onItemClick: (SkillStats) -> Unit
+) : RecyclerView.Adapter<StatsAdapter.StatsViewHolder>() {
 
     private val items = mutableListOf<SkillStats>()
 
@@ -20,7 +22,7 @@ class StatsAdapter : RecyclerView.Adapter<StatsAdapter.StatsViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StatsViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_stat, parent, false)
-        return StatsViewHolder(view)
+        return StatsViewHolder(view, onItemClick)
     }
 
     override fun getItemCount(): Int = items.size
@@ -29,7 +31,10 @@ class StatsAdapter : RecyclerView.Adapter<StatsAdapter.StatsViewHolder>() {
         holder.bind(items[position])
     }
 
-    class StatsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class StatsViewHolder(
+        itemView: View,
+        private val onItemClick: (SkillStats) -> Unit
+    ) : RecyclerView.ViewHolder(itemView) {
         private val title: TextView = itemView.findViewById(R.id.statSkillName)
         private val sessions: TextView = itemView.findViewById(R.id.statSessionCount)
         private val duration: TextView = itemView.findViewById(R.id.statDuration)
@@ -38,6 +43,7 @@ class StatsAdapter : RecyclerView.Adapter<StatsAdapter.StatsViewHolder>() {
             title.text = stat.skillName
             sessions.text = "Sessions: ${stat.sessionCount}"
             duration.text = "Minutes: ${stat.totalDurationMinutes}"
+            itemView.setOnClickListener { onItemClick(stat) }
         }
     }
 }

@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -16,7 +17,10 @@ class SkillsListFragment : Fragment() {
     private var _binding: FragmentSkillsListBinding? = null
     private val binding get() = _binding!!
     private val viewModel: SkillsListViewModel by viewModels()
-    private val adapter = SkillsAdapter()
+    private val adapter = SkillsAdapter { skill ->
+        val args = bundleOf("skillId" to skill.id)
+        findNavController().navigate(R.id.action_skillsListFragment_to_skillEditFragment, args)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

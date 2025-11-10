@@ -29,8 +29,8 @@ class StatsRepository {
         )
     }
 
-    suspend fun getSkillDetails(skillId: Long, from: String? = null, to: String? = null): SkillDetailsStats {
-        val dto = api.getSkillDetails(skillId, from, to)
+    suspend fun getSkillDetailsStats(skillId: Long): SkillDetailsStats {
+        val dto = api.getSkillDetails(skillId)
         return SkillDetailsStats(
             skillId = dto.skillId,
             skillName = dto.skillName,
