@@ -44,6 +44,10 @@ class SkillsListFragment : Fragment() {
             findNavController().navigate(R.id.action_skillsListFragment_to_statsFragment)
         }
 
+        binding.includeArchivedCheckbox.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.toggleIncludeArchived(isChecked)
+        }
+
         viewModel.skills.observe(viewLifecycleOwner) { skills ->
             adapter.submitList(skills)
         }

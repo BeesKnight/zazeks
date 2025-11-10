@@ -20,13 +20,22 @@ public class SkillService {
         SkillEntity entity = new SkillEntity();
         entity.setName(request.name());
         entity.setDescription(request.description());
+        entity.setCategory(request.category());
+        entity.setColor(request.color());
+        entity.setArchived(false);
         SkillEntity saved = skillRepository.save(entity);
         return SkillMapper.toDto(saved);
     }
 
     @Transactional(readOnly = true)
-    public List<SkillDto> getAllSkills() {
-        return skillRepository.findAll().stream()
+    public List<SkillDto> getAllSkills(Boolean includeArchived) {
+        List<SkillEntity> skills;
+        if (Boolean.TRUE.equals(includeArchived)) {
+            skills = skillRepository.findAll();
+        } else {
+            skills = skillRepository.findByArchived(false);
+        }
+        return skills.stream()
                 .map(SkillMapper::toDto)
                 .toList();
     }
@@ -39,6 +48,12 @@ public class SkillService {
     public SkillDto updateSkill(Long id, UpdateSkillRequest request) {
         SkillEntity entity = findSkill(id);
         SkillMapper.updateEntity(entity, request);
+        return SkillMapper.toDto(skillRepository.save(entity));
+    }
+
+    public SkillDto archiveSkill(Long id) {
+        SkillEntity entity = findSkill(id);
+        entity.setArchived(true);
         return SkillMapper.toDto(skillRepository.save(entity));
     }
 

@@ -6,6 +6,7 @@ import com.example.skilltracker.skill.SkillService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -27,16 +28,25 @@ public class SessionService {
         entity.setSessionDate(request.sessionDate());
         entity.setDurationMinutes(request.durationMinutes());
         entity.setNotes(request.notes());
+        entity.setDifficulty(request.difficulty());
+        entity.setSource(request.source());
         SessionEntity saved = sessionRepository.save(entity);
         return SessionMapper.toDto(saved);
     }
 
     @Transactional(readOnly = true)
-    public List<SessionDto> findBySkill(Long skillId) {
-        SkillEntity skill = skillService.findSkill(skillId);
-        return sessionRepository.findBySkill(skill).stream()
+    public List<SessionDto> getSessions(Long skillId, Instant from, Instant to) {
+        if (skillId != null) {
+            skillService.findSkill(skillId);
+        }
+        return sessionRepository.findByFilters(skillId, from, to).stream()
                 .map(SessionMapper::toDto)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<SessionDto> findBySkill(Long skillId) {
+        return getSessions(skillId, null, null);
     }
 
     @Transactional(readOnly = true)
@@ -47,8 +57,6 @@ public class SessionService {
 
     @Transactional(readOnly = true)
     public List<SessionDto> getAll() {
-        return sessionRepository.findAll().stream()
-                .map(SessionMapper::toDto)
-                .toList();
+        return getSessions(null, null, null);
     }
 }

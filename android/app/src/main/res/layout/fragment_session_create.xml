@@ -9,33 +9,63 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <EditText
-            android:id="@+id/sessionSkillIdInput"
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Skill ID"
-            android:inputType="number" />
+            android:text="@string/session_skill_label" />
+
+        <Spinner
+            android:id="@+id/sessionSkillSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" />
 
         <EditText
             android:id="@+id/sessionDurationInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Duration (minutes)"
+            android:hint="@string/session_duration_hint"
             android:inputType="number"
-            android:layout_marginTop="8dp" />
+            android:layout_marginTop="12dp" />
+
+        <TextView
+            android:id="@+id/sessionDifficultyValue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/session_difficulty_placeholder"
+            android:layout_marginTop="12dp" />
+
+        <SeekBar
+            android:id="@+id/sessionDifficultySeekBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="4"
+            android:progress="2" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/session_source_label"
+            android:layout_marginTop="12dp" />
+
+        <Spinner
+            android:id="@+id/sessionSourceSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" />
 
         <EditText
             android:id="@+id/sessionNotesInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Notes"
-            android:layout_marginTop="8dp" />
+            android:hint="@string/session_notes_hint"
+            android:layout_marginTop="12dp" />
 
         <Button
             android:id="@+id/saveSessionButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Save"
+            android:text="@string/save"
             android:layout_marginTop="16dp" />
     </LinearLayout>
 </ScrollView>
