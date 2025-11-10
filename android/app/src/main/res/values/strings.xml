@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Skill Tracker</string>
+    <string name="skills_title">Skills</string>
+    <string name="add_skill">Add Skill</string>
+    <string name="create_session">Create Session</string>
+    <string name="stats_title">Stats</string>
+</resources>
