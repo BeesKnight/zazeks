@@ -11,14 +11,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        setupActionBarWithNavController(navHostFragment.navController)
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navController = navHostFragment.navController
+
+        // УБИРАЕМ настройку ActionBar, т.к. его нет
+        // setupActionBarWithNavController(navController)
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        return navHostFragment.navController.navigateUp() || super.onSupportNavigateUp()
-    }
+    // И заодно можно убрать/закомментировать override onSupportNavigateUp, если он есть,
+    // или оставить – он просто не будет использовать ActionBar.
 }
+

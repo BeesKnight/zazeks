@@ -14,9 +14,11 @@ class SessionRepository {
         skillId: Long? = null,
         from: String? = null,
         to: String? = null
-    ): List<Session> = api.getSessions(skillId, from, to).map(SessionDto::toDomain)
+    ): List<Session> =
+        api.getSessions(skillId, from, to).map { it.toDomain() }
 
-    suspend fun getSession(id: Long): Session = api.getSession(id).toDomain()
+    suspend fun getSession(id: Long): Session =
+        api.getSession(id).toDomain()
 
     suspend fun createSession(
         skillId: Long,

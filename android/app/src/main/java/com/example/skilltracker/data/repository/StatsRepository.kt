@@ -14,18 +14,27 @@ import com.example.skilltracker.domain.model.SkillStats
 class StatsRepository {
     private val api = ApiClient.statsApi
 
-    suspend fun getSkillStats(): List<SkillStats> = api.getSkillStats().map { dto ->
-        SkillStats(dto.skillId, dto.skillName, dto.sessionCount, dto.totalDurationMinutes)
-    }
+    suspend fun getSkillStats(): List<SkillStats> =
+        api.getSkillStats().map { dto ->
+            SkillStats(
+                skillId = dto.skillId,
+                skillName = dto.skillName,
+                sessionCount = dto.sessionCount,
+                totalDurationMinutes = dto.totalDurationMinutes
+            )
+        }
 
-    suspend fun getOverviewStats(from: String? = null, to: String? = null): OverviewStats {
+    suspend fun getOverviewStats(
+        from: String? = null,
+        to: String? = null
+    ): OverviewStats {
         val dto = api.getOverviewStats(from, to)
         return OverviewStats(
             totalMinutes = dto.totalMinutes,
             skillsCount = dto.skillsCount,
             sessionsCount = dto.sessionsCount,
-            bySkill = dto.bySkill.map(OverviewSkillBreakdownDto::toDomain),
-            inactiveSkills = dto.inactiveSkills.map(InactiveSkillDto::toDomain)
+            bySkill = dto.bySkill.map { it.toDomain() },
+            inactiveSkills = dto.inactiveSkills.map { it.toDomain() }
         )
     }
 
@@ -37,25 +46,28 @@ class StatsRepository {
             totalMinutes = dto.totalMinutes,
             sessionsCount = dto.sessionsCount,
             averageDifficulty = dto.averageDifficulty,
-            byDay = dto.byDay.map(SkillDailyStatsDto::toDomain)
+            byDay = dto.byDay.map { it.toDomain() }
         )
     }
 
-    private fun OverviewSkillBreakdownDto.toDomain(): OverviewSkillBreakdown = OverviewSkillBreakdown(
-        skillId = skillId,
-        skillName = skillName,
-        minutes = minutes,
-        sessions = sessions
-    )
+    private fun OverviewSkillBreakdownDto.toDomain(): OverviewSkillBreakdown =
+        OverviewSkillBreakdown(
+            skillId = skillId,
+            skillName = skillName,
+            minutes = minutes,
+            sessions = sessions
+        )
 
-    private fun InactiveSkillDto.toDomain(): InactiveSkill = InactiveSkill(
-        skillId = skillId,
-        skillName = skillName,
-        daysSinceLastSession = daysSinceLastSession
-    )
+    private fun InactiveSkillDto.toDomain(): InactiveSkill =
+        InactiveSkill(
+            skillId = skillId,
+            skillName = skillName,
+            daysSinceLastSession = daysSinceLastSession
+        )
 
-    private fun SkillDailyStatsDto.toDomain(): SkillDailyStats = SkillDailyStats(
-        date = date,
-        minutes = minutes
-    )
+    private fun SkillDailyStatsDto.toDomain(): SkillDailyStats =
+        SkillDailyStats(
+            date = date,
+            minutes = minutes
+        )
 }
