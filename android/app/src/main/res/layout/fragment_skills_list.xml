@@ -1,49 +1,219 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@color/colorBackground">
 
-    <CheckBox
-        android:id="@+id/includeArchivedCheckbox"
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorBackground"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/homeToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="56dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            app:logo="@mipmap/ic_launcher_round"
+            app:logoGravity="start"
+            app:title="@string/app_name"
+            app:titleTextAppearance="@style/TextAppearance.SkillTracker.Headline"
+            app:titleTextColor="@color/colorOnBackground" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="96dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="8dp"
+            android:paddingBottom="24dp"
+            android:dividerPadding="0dp">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/colorOutline">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:id="@+id/todayTitle"
+                        style="@style/TextAppearance.SkillTracker.Subtitle"
+                        android:text="Today"
+                        android:textAllCaps="false" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/summaryTotalMinutesValue"
+                                style="@style/TextAppearance.SkillTracker.Subtitle"
+                                android:text="0" />
+
+                            <TextView
+                                android:id="@+id/summaryTotalMinutesLabel"
+                                style="@style/TextAppearance.SkillTracker.Label"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/overview_total_minutes" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/summarySessionsValue"
+                                style="@style/TextAppearance.SkillTracker.Subtitle"
+                                android:text="0" />
+
+                            <TextView
+                                android:id="@+id/summarySessionsLabel"
+                                style="@style/TextAppearance.SkillTracker.Label"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/overview_sessions_count" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/summarySkillsValue"
+                                style="@style/TextAppearance.SkillTracker.Subtitle"
+                                android:text="0" />
+
+                            <TextView
+                                android:id="@+id/summarySkillsLabel"
+                                style="@style/TextAppearance.SkillTracker.Label"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/overview_skills_count" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/TextAppearance.SkillTracker.Subtitle"
+                android:text="Actions" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/addSkillButton"
+                    style="@style/Widget.SkillTracker.Button.Primary"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/add_skill" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/addSessionButton"
+                    style="@style/Widget.SkillTracker.Button.Outlined"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:text="@string/create_session" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/viewStatsButton"
+                    style="@style/Widget.SkillTracker.Button.Text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="@string/stats_title" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/TextAppearance.SkillTracker.Subtitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/skills_title" />
+
+                <com.google.android.material.checkbox.MaterialCheckBox
+                    android:id="@+id/includeArchivedCheckbox"
+                    style="@style/TextAppearance.SkillTracker.Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/include_archived"
+                    android:textAppearance="@style/TextAppearance.SkillTracker.Label" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/skillsRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="false"
+                android:paddingBottom="8dp"
+                android:scrollbars="none" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/quickCreateSessionFab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/include_archived" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="end"
-        android:layout_marginBottom="8dp"
-        android:layout_marginTop="8dp">
-
-        <Button
-            android:id="@+id/addSkillButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/add_skill" />
-
-        <Button
-            android:id="@+id/addSessionButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/create_session"
-            android:layout_marginStart="8dp" />
-
-        <Button
-            android:id="@+id/viewStatsButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/stats_title"
-            android:layout_marginStart="8dp" />
-    </LinearLayout>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/skillsRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
-</LinearLayout>
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:contentDescription="@string/create_session"
+        android:src="@android:drawable/ic_input_add"
+        app:backgroundTint="@color/colorPrimary"
+        app:maxImageSize="24dp"
+        app:tint="@color/colorOnPrimary" />
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -20,6 +20,8 @@
     <string name="skill_description_hint">Description</string>
     <string name="skill_category_hint">Category (optional)</string>
     <string name="skill_color_hint">Color (#RRGGBB)</string>
+    <string name="skill_name_hint_required">Skill name *</string>
+    <string name="new_skill_title">New skill</string>
     <string name="save">Save</string>
     <string name="skill_created">Skill created</string>
     <string name="skill_create_failed">Failed to create skill</string>

@@ -1,107 +1,229 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:background="@color/colorBackground">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/session_skill_label" />
-
-        <Spinner
-            android:id="@+id/sessionSkillSpinner"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp" />
-
-        <TextView
-            android:id="@+id/sessionDateValue"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/session_date_placeholder" />
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/sessionCreateScroll"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal">
+            android:orientation="vertical"
+            android:paddingTop="24dp"
+            android:paddingBottom="24dp">
 
-            <Button
-                android:id="@+id/selectSessionDateButton"
-                android:layout_width="0dp"
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:layout_weight="1"
-                android:text="@string/session_select_date" />
+                app:cardElevation="2dp"
+                app:strokeColor="@color/colorOutline"
+                app:strokeWidth="1dp">
 
-            <Button
-                android:id="@+id/selectSessionTimeButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/session_select_time" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        style="@style/TextAppearance.SkillTracker.Subtitle"
+                        android:text="@string/create_session" />
+
+                    <TextView
+                        style="@style/TextAppearance.SkillTracker.Label"
+                        android:layout_marginTop="20dp"
+                        android:text="@string/session_skill_label" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        app:cardBackgroundColor="@color/colorSurfaceVariant"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        app:cardUseCompatPadding="false">
+
+                        <Spinner
+                            android:id="@+id/sessionSkillSpinner"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/transparent"
+                            android:dropDownVerticalOffset="8dp"
+                            android:paddingStart="16dp"
+                            android:paddingTop="12dp"
+                            android:paddingEnd="16dp"
+                            android:paddingBottom="12dp"
+                            android:popupTheme="@style/ThemeOverlay.MaterialComponents.MaterialAlertDialog" />
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <TextView
+                        style="@style/TextAppearance.SkillTracker.Label"
+                        android:layout_marginTop="24dp"
+                        android:text="Session date &amp; time" />
+
+                    <TextView
+                        android:id="@+id/sessionDateValue"
+                        style="@style/TextAppearance.SkillTracker.Body"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/session_date_placeholder" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/selectSessionDateButton"
+                            style="@style/Widget.SkillTracker.Button.Outlined"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/session_select_date"
+                            app:icon="@android:drawable/ic_menu_my_calendar"
+                            app:iconGravity="textStart"
+                            app:iconPadding="12dp"
+                            app:iconTint="@color/colorOnSurface" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/selectSessionTimeButton"
+                            style="@style/Widget.SkillTracker.Button.Outlined"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:text="@string/session_select_time"
+                            app:icon="@android:drawable/ic_menu_recent_history"
+                            app:iconGravity="textStart"
+                            app:iconPadding="12dp"
+                            app:iconTint="@color/colorOnSurface" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/clearSessionDateButton"
+                            style="@style/Widget.SkillTracker.Button.Text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:text="@string/session_clear_datetime" />
+                    </LinearLayout>
+
+                    <TextView
+                        style="@style/TextAppearance.SkillTracker.Label"
+                        android:layout_marginTop="24dp"
+                        android:text="Duration (minutes)" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/sessionDurationInputLayout"
+                        style="@style/Widget.SkillTracker.TextInputLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        app:hintTextAppearance="@style/TextAppearance.SkillTracker.Label">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/sessionDurationInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/session_duration_hint"
+                            android:inputType="number"
+                            android:textColor="@color/colorOnSurface" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        style="@style/TextAppearance.SkillTracker.Label"
+                        android:layout_marginTop="24dp"
+                        android:text="Difficulty" />
+
+                    <TextView
+                        android:id="@+id/sessionDifficultyValue"
+                        style="@style/TextAppearance.SkillTracker.Body"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/session_difficulty_placeholder" />
+
+                    <SeekBar
+                        android:id="@+id/sessionDifficultySeekBar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:max="4"
+                        android:progress="2"
+                        android:progressTint="@color/colorPrimary"
+                        android:thumbTint="@color/colorPrimary" />
+
+                    <TextView
+                        style="@style/TextAppearance.SkillTracker.Label"
+                        android:layout_marginTop="24dp"
+                        android:text="@string/session_source_label" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        app:cardBackgroundColor="@color/colorSurfaceVariant"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        app:cardUseCompatPadding="false">
+
+                        <Spinner
+                            android:id="@+id/sessionSourceSpinner"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/transparent"
+                            android:dropDownVerticalOffset="8dp"
+                            android:paddingStart="16dp"
+                            android:paddingTop="12dp"
+                            android:paddingEnd="16dp"
+                            android:paddingBottom="12dp"
+                            android:popupTheme="@style/ThemeOverlay.MaterialComponents.MaterialAlertDialog" />
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/sessionNotesInputLayout"
+                        style="@style/Widget.SkillTracker.TextInputLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        app:hintTextAppearance="@style/TextAppearance.SkillTracker.Label">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/sessionNotesInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="top"
+                            android:hint="@string/session_notes_hint"
+                            android:inputType="textMultiLine"
+                            android:maxLines="4"
+                            android:minLines="3"
+                            android:textColor="@color/colorOnSurface" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/saveSessionButton"
+                        style="@style/Widget.SkillTracker.Button.Primary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="32dp"
+                        android:text="@string/save"
+                        app:icon="@drawable/ic_check"
+                        app:iconGravity="textStart"
+                        app:iconPadding="12dp"
+                        app:iconTint="@color/colorOnPrimary" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
-
-        <Button
-            android:id="@+id/clearSessionDateButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/session_clear_datetime" />
-
-        <EditText
-            android:id="@+id/sessionDurationInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:hint="@string/session_duration_hint"
-            android:inputType="number" />
-
-        <TextView
-            android:id="@+id/sessionDifficultyValue"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/session_difficulty_placeholder" />
-
-        <SeekBar
-            android:id="@+id/sessionDifficultySeekBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:max="4"
-            android:progress="2" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/session_source_label" />
-
-        <Spinner
-            android:id="@+id/sessionSourceSpinner"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp" />
-
-        <EditText
-            android:id="@+id/sessionNotesInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:hint="@string/session_notes_hint" />
-
-        <Button
-            android:id="@+id/saveSessionButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/save" />
-    </LinearLayout>
-</ScrollView>
+    </androidx.core.widget.NestedScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,53 +1,217 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:background="@color/colorBackground">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/totalMinutesValue"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/overview_total_minutes"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/sessionsCountValue"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/overview_sessions_count"
-            android:layout_marginTop="4dp" />
-
-        <TextView
-            android:id="@+id/skillsCountValue"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/overview_skills_count"
-            android:layout_marginTop="4dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/inactive_skills_title"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp" />
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/statsScroll"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
-            android:id="@+id/inactiveSkillsContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginTop="4dp" />
+            android:paddingTop="24dp"
+            android:paddingBottom="24dp"
+            android:dividerPadding="0dp">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/statsRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp" />
-    </LinearLayout>
-</ScrollView>
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardElevation="2dp"
+                app:strokeColor="@color/colorOutline"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        style="@style/TextAppearance.SkillTracker.Subtitle"
+                        android:text="Overview" />
+
+                    <TextView
+                        android:id="@+id/totalMinutesValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/overview_total_minutes"
+                        android:textColor="@color/colorOnBackground"
+                        android:textSize="32sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:gravity="center"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/sessionsCountValue"
+                                style="@style/TextAppearance.SkillTracker.Subtitle"
+                                android:text="@string/overview_sessions_count"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                style="@style/TextAppearance.SkillTracker.Label"
+                                android:layout_marginTop="4dp"
+                                android:text="Sessions" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/skillsCountValue"
+                                style="@style/TextAppearance.SkillTracker.Subtitle"
+                                android:text="@string/overview_skills_count"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                style="@style/TextAppearance.SkillTracker.Label"
+                                android:layout_marginTop="4dp"
+                                android:text="Skills" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardElevation="2dp"
+                app:strokeColor="@color/colorOutline"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        style="@style/TextAppearance.SkillTracker.Subtitle"
+                        android:text="Charts" />
+
+                    <TextView
+                        style="@style/TextAppearance.SkillTracker.Label"
+                        android:layout_marginTop="16dp"
+                        android:text="This week" />
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/weeklyProgress"
+                        style="@style/Widget.MaterialComponents.LinearProgressIndicator"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:progress="70"
+                        app:indeterminate="false"
+                        app:trackColor="@color/colorOutline"
+                        app:trackThickness="6dp"
+                        app:indicatorColor="@color/colorChartWeek" />
+
+                    <TextView
+                        style="@style/TextAppearance.SkillTracker.Label"
+                        android:layout_marginTop="20dp"
+                        android:text="This month" />
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/monthlyProgress"
+                        style="@style/Widget.MaterialComponents.LinearProgressIndicator"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:progress="45"
+                        app:indeterminate="false"
+                        app:trackColor="@color/colorOutline"
+                        app:trackThickness="6dp"
+                        app:indicatorColor="@color/colorChartMonth" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardElevation="2dp"
+                app:strokeColor="@color/colorOutline"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        style="@style/TextAppearance.SkillTracker.Subtitle"
+                        android:text="@string/inactive_skills_title" />
+
+                    <LinearLayout
+                        android:id="@+id/inactiveSkillsContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal"
+                        android:showDividers="none" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardElevation="2dp"
+                app:strokeColor="@color/colorOutline"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        style="@style/TextAppearance.SkillTracker.Subtitle"
+                        android:text="Details" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/statsRecyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:nestedScrollingEnabled="false"
+                        android:paddingBottom="8dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>
