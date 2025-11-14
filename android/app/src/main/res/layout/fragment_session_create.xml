@@ -47,7 +47,7 @@
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/sessionCreateMainCard"
-                style="@style/Widget.Material3.CardView.Elevated"
+                style="@style/Widget.MaterialComponents.CardView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
@@ -92,7 +92,7 @@
                         android:layout_marginBottom="12dp"
                         android:background="@drawable/edit_text_background"
                         android:padding="12dp"
-                        android:text="@string/hint_session_date"
+                        android:text="@string/session_date_placeholder"
                         android:textColor="@color/black" />
 
                     <LinearLayout
@@ -104,7 +104,7 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/selectSessionDateButton"
-                            style="@style/Widget.Material3.Button.FilledTonalButton"
+                            style="@style/Widget.MaterialComponents.Button"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="8dp"
@@ -114,7 +114,7 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/selectSessionTimeButton"
-                            style="@style/Widget.Material3.Button.FilledTonalButton"
+                            style="@style/Widget.MaterialComponents.Button"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
@@ -124,7 +124,7 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/clearSessionDateButton"
-                        style="@style/Widget.Material3.Button.TextButton"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
@@ -223,7 +223,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/saveSessionButton"
-                style="@style/Widget.Material3.Button.ElevatedButton"
+                style="@style/Widget.MaterialComponents.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/button_save_session"

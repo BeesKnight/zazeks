@@ -37,7 +37,7 @@
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/statsSummaryCard"
-                style="@style/Widget.Material3.CardView.Elevated"
+                style="@style/Widget.MaterialComponents.CardView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
@@ -90,7 +90,7 @@
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/inactiveSkillsCard"
-                style="@style/Widget.Material3.CardView.Elevated"
+                style="@style/Widget.MaterialComponents.CardView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"

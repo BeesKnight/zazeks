@@ -36,7 +36,7 @@
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/skillCreateMainCard"
-                style="@style/Widget.Material3.CardView.Elevated"
+                style="@style/Widget.MaterialComponents.CardView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
@@ -207,7 +207,7 @@
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/skillCreateScheduleCard"
-                style="@style/Widget.Material3.CardView.Elevated"
+                style="@style/Widget.MaterialComponents.CardView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
@@ -298,7 +298,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/saveSkillButton"
-                style="@style/Widget.Material3.Button.ElevatedButton"
+                style="@style/Widget.MaterialComponents.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/button_save_skill"
