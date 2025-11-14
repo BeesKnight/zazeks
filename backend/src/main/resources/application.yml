@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/minitasker
+    username: minitasker
+    password: minitasker
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+logging:
+  level:
+    root: INFO
+    com.example.minitasker: DEBUG
+
+minitasker:
+  security:
+    jwt-secret: change-me-please-change-me-please-change-me-please
+    jwt-expiration-minutes: 60
+  storage:
+    upload-dir: ./uploads
+
+server:
+  port: 8080
