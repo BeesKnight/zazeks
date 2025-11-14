@@ -14,6 +14,16 @@
     <string name="tab_skills">Skills</string>
     <string name="tab_stats">Stats</string>
 
+    <!-- Skill list / overview -->
+    <string name="overview_total_minutes">Total minutes</string>
+    <string name="overview_sessions_count">Sessions</string>
+    <string name="overview_skills_count">Skills</string>
+    <string name="add_skill">Add skill</string>
+    <string name="create_session">Create session</string>
+    <string name="stats_title">Statistics</string>
+    <string name="skills_title">Skills</string>
+    <string name="include_archived">Include archived</string>
+
     <!-- Skill list / item -->
     <string name="skill_item_target">%1$d %2$s</string>
     <string name="skill_item_sessions">%1$d sessions</string>
@@ -133,6 +143,10 @@
     <string name="session_value_placeholder">0</string>
 
     <!-- Stats screen -->
+    <string name="stats_summary_title">Summary</string>
+    <string name="label_total_sessions">Total sessions</string>
+    <string name="label_total_skills">Total skills</string>
+    <string name="label_average_progress">Average progress</string>
     <string name="stats_header_overview">Overview</string>
     <string name="stats_header_today">Today</string>
     <string name="stats_header_last_week">Last week</string>
@@ -153,11 +167,20 @@
     <string name="stats_daily_streak">Current streak</string>
     <string name="stats_streak_days">%1$d days</string>
 
+    <string name="stats_skill_progress_title">Skill progress</string>
+    <string name="label_stats_skill_name">Skill</string>
+    <string name="label_stats_skill_progress">Progress</string>
+    <string name="stats_skill_progress_empty">No progress to show yet</string>
+    <string name="stats_session_list_title">Recent sessions</string>
+
     <string name="stats_today_total_short">%1$d min</string>
     <string name="stats_today_best_short">%1$d min</string>
 
     <!-- Chart / stats misc -->
     <string name="stats_chart_content_description">Statistics chart</string>
+
+    <!-- Misc -->
+    <string name="skill_archived_label">Archived</string>
 
     <!-- Generic messages -->
     <string name="error_general">Something went wrong. Please try again.</string>
