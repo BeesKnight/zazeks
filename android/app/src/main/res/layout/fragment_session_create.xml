@@ -37,7 +37,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/sessionCreateTopAppBar">
+        app:layout_constraintTop_toBottomOf="@id/sessionCreateTopAppBar">
 
         <LinearLayout
             android:id="@+id/sessionCreateContentContainer"
@@ -47,7 +47,7 @@
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/sessionCreateMainCard"
-                style="@style/Widget.Material3.CardView.Elevated"
+                style="@style/Widget.MaterialComponents.CardView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
@@ -70,7 +70,7 @@
                         android:textColor="@color/black" />
 
                     <Spinner
-                        android:id="@+id/spinnerSessionSkill"
+                        android:id="@+id/sessionSkillSpinner"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
@@ -85,32 +85,51 @@
                         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                         android:textColor="@color/black" />
 
-                    <LinearLayout
-                        android:id="@+id/sessionDateContainer"
+                    <TextView
+                        android:id="@+id/sessionDateValue"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:layout_marginBottom="12dp"
+                        android:background="@drawable/edit_text_background"
+                        android:padding="12dp"
+                        android:text="@string/session_date_placeholder"
+                        android:textColor="@color/black" />
 
-                        <TextView
-                            android:id="@+id/textSessionDate"
+                    <LinearLayout
+                        android:id="@+id/sessionDateActions"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/selectSessionDateButton"
+                            style="@style/Widget.MaterialComponents.Button"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="8dp"
                             android:layout_weight="1"
-                            android:background="@drawable/edit_text_background"
-                            android:padding="12dp"
-                            android:text="@string/hint_session_date"
-                            android:textColor="@color/black" />
+                            android:text="@string/session_select_date"
+                            android:textAllCaps="false" />
 
                         <com.google.android.material.button.MaterialButton
-                            android:id="@+id/buttonPickSessionDate"
-                            style="@style/Widget.Material3.Button.IconButton"
-                            android:layout_width="wrap_content"
+                            android:id="@+id/selectSessionTimeButton"
+                            style="@style/Widget.MaterialComponents.Button"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            app:icon="@drawable/ic_calendar"
-                            app:iconGravity="textStart" />
+                            android:layout_weight="1"
+                            android:text="@string/session_select_time"
+                            android:textAllCaps="false" />
                     </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/clearSessionDateButton"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/session_clear_datetime"
+                        android:textAllCaps="false" />
 
                     <TextView
                         android:id="@+id/labelSessionValue"
@@ -122,43 +141,63 @@
                         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                         android:textColor="@color/black" />
 
-                    <LinearLayout
-                        android:id="@+id/sessionValueContainer"
+                    <EditText
+                        android:id="@+id/sessionDurationInput"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:layout_marginBottom="16dp"
+                        android:background="@drawable/edit_text_background"
+                        android:hint="@string/session_duration_hint"
+                        android:imeOptions="actionNext"
+                        android:inputType="number"
+                        android:maxLines="1"
+                        android:padding="12dp"
+                        android:textColor="@color/black" />
 
-                        <SeekBar
-                            android:id="@+id/seekBarSessionValue"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="8dp"
-                            android:layout_weight="1"
-                            android:max="100"
-                            android:progress="50" />
+                    <TextView
+                        android:id="@+id/sessionDifficultyValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="@string/session_difficulty_placeholder"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                        android:textColor="@color/black" />
 
-                        <TextView
-                            android:id="@+id/textSessionValue"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="50"
-                            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                            android:textColor="@color/black" />
-                    </LinearLayout>
+                    <SeekBar
+                        android:id="@+id/sessionDifficultySeekBar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:max="4"
+                        android:progress="2" />
+
+                    <TextView
+                        android:id="@+id/sessionSourceLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="@string/session_source_label"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                        android:textColor="@color/black" />
+
+                    <Spinner
+                        android:id="@+id/sessionSourceSpinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:background="@drawable/spinner_background" />
 
                     <TextView
                         android:id="@+id/labelSessionNotes"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
                         android:layout_marginBottom="8dp"
                         android:text="@string/label_session_notes"
                         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                         android:textColor="@color/black" />
 
                     <EditText
-                        android:id="@+id/editTextSessionNotes"
+                        android:id="@+id/sessionNotesInput"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
@@ -168,7 +207,8 @@
                         android:imeOptions="actionDone"
                         android:inputType="textCapSentences|textMultiLine"
                         android:minLines="3"
-                        android:padding="12dp" />
+                        android:padding="12dp"
+                        android:textColor="@color/black" />
 
                     <TextView
                         android:id="@+id/sessionAdditionalInfo"
@@ -183,7 +223,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/saveSessionButton"
-                style="@style/Widget.Material3.Button.ElevatedButton"
+                style="@style/Widget.MaterialComponents.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/button_save_session"
