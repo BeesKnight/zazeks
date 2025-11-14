@@ -55,6 +55,10 @@
     <string name="create_session_title">New session</string>
     <string name="session_create_title">Create session</string>
     <string name="session_edit_title">Edit session</string>
+    <string name="label_session_skill">Skill</string>
+    <string name="label_session_date">Date and time</string>
+    <string name="label_session_value">Result / value</string>
+    <string name="label_session_notes">Notes</string>
     <string name="session_label_skill">Skill</string>
     <string name="session_label_date">Date and time</string>
     <string name="session_label_value">Result / value</string>
@@ -67,18 +71,29 @@
         You can edit this session later in the skill details screen.
     </string>
     <string name="session_delete_button">Delete session</string>
+    <string name="session_skill_label">Skill</string>
+    <string name="session_select_date">Select date</string>
+    <string name="session_select_time">Select time</string>
+    <string name="session_clear_datetime">Clear date &amp; time</string>
+    <string name="session_duration_hint">Duration (minutes)</string>
+    <string name="session_difficulty_placeholder">Difficulty</string>
+    <string name="session_source_label">Session source</string>
+    <string name="save">Save</string>
 
     <!-- Skill create / edit -->
     <string name="create_skill_title">New skill</string>
     <string name="skill_create_title">Create skill</string>
+    <string name="skill_edit_title">Edit skill</string>
 
     <string name="skill_label_name">Skill name</string>
     <string name="label_skill_name">Skill name</string>
     <string name="hint_skill_name">For example: Push-ups, English, Piano practice</string>
+    <string name="skill_name_hint_required">Skill name (required)</string>
 
     <string name="skill_label_description">Description</string>
     <string name="label_skill_description">Description</string>
     <string name="hint_skill_description">Short description of this skill</string>
+    <string name="skill_description_hint">Describe the skill</string>
 
     <string name="skill_type_label">Skill type</string>
     <string name="label_skill_type">Skill type</string>
@@ -109,6 +124,9 @@
     <string name="skill_schedule_additional_info">
         The schedule is only a reminder, you can log sessions on any day.
     </string>
+    <string name="skill_category_hint">Category (optional)</string>
+    <string name="skill_color_hint">Color (e.g., #FF0000)</string>
+    <string name="skill_archive_button">Archive skill</string>
 
     <!-- Session placeholders -->
     <string name="session_date_placeholder">Not selected</string>
