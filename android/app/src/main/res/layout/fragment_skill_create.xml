@@ -59,7 +59,7 @@
                         android:textColor="@color/black" />
 
                     <EditText
-                        android:id="@+id/editTextSkillName"
+                        android:id="@+id/skillNameInput"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
@@ -80,7 +80,7 @@
                         android:textColor="@color/black" />
 
                     <EditText
-                        android:id="@+id/editTextSkillDescription"
+                        android:id="@+id/skillDescriptionInput"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
@@ -90,6 +90,48 @@
                         android:imeOptions="actionNext"
                         android:inputType="textCapSentences|textMultiLine"
                         android:minLines="3"
+                        android:padding="12dp" />
+
+                    <TextView
+                        android:id="@+id/labelSkillCategory"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="@string/skill_category_hint"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                        android:textColor="@color/black" />
+
+                    <EditText
+                        android:id="@+id/skillCategoryInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:background="@drawable/edit_text_background"
+                        android:hint="@string/skill_category_hint"
+                        android:imeOptions="actionNext"
+                        android:inputType="textCapSentences"
+                        android:maxLines="1"
+                        android:padding="12dp" />
+
+                    <TextView
+                        android:id="@+id/labelSkillColor"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="@string/skill_color_hint"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                        android:textColor="@color/black" />
+
+                    <EditText
+                        android:id="@+id/skillColorInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:background="@drawable/edit_text_background"
+                        android:hint="@string/skill_color_hint"
+                        android:imeOptions="actionNext"
+                        android:inputType="text"
+                        android:maxLines="1"
                         android:padding="12dp" />
 
                     <TextView

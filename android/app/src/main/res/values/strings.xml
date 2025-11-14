@@ -38,6 +38,13 @@
     <string name="skill_details_session_item">%1$s – %2$d minutes</string>
     <string name="skill_details_daily_header">Today</string>
     <string name="skill_details_sessions_header">Sessions history</string>
+    <string name="skill_details_title_placeholder">Skill details</string>
+    <string name="skill_details_total_minutes">Total minutes: %1$d</string>
+    <string name="skill_details_sessions">Sessions: %1$d</string>
+    <string name="skill_details_average_difficulty">Average difficulty: %1$s</string>
+    <string name="skill_details_average_difficulty_na">Average difficulty: —</string>
+    <string name="skill_details_empty_daily">No daily stats available</string>
+    <string name="skill_details_daily_item">%1$s – %2$d min</string>
 
     <!-- Skill types -->
     <string name="skill_type_reps">Repetitions</string>
@@ -77,6 +84,13 @@
     <string name="session_notes_hint">What went well? What should be improved next time?</string>
     <string name="hint_session_date">Choose date and time</string>
     <string name="hint_session_notes">Comment on this training session</string>
+    <string name="session_input_error">Select a skill and enter a duration greater than zero.</string>
+    <string name="session_create_failed">Could not create the session. Please try again.</string>
+    <string name="session_update_failed">Could not update the session. Please try again.</string>
+    <string name="session_delete_failed">Could not delete the session. Please try again.</string>
+    <string name="session_date_selected_date">Selected: %1$s</string>
+    <string name="session_difficulty_value">Difficulty: %1$d</string>
+    <string name="session_source_none">None</string>
     <string name="session_additional_info">
         You can edit this session later in the skill details screen.
     </string>
@@ -94,6 +108,11 @@
     <string name="create_skill_title">New skill</string>
     <string name="skill_create_title">Create skill</string>
     <string name="skill_edit_title">Edit skill</string>
+    <string name="skill_create_failed">Could not create the skill. Please try again.</string>
+    <string name="skill_update_failed">Could not update the skill. Please try again.</string>
+    <string name="skill_archive_failed">Could not archive the skill. Please try again.</string>
+    <string name="skill_archived">Skill archived</string>
+    <string name="skill_name_required">Skill name is required.</string>
 
     <string name="skill_label_name">Skill name</string>
     <string name="label_skill_name">Skill name</string>
@@ -172,6 +191,9 @@
     <string name="label_stats_skill_progress">Progress</string>
     <string name="stats_skill_progress_empty">No progress to show yet</string>
     <string name="stats_session_list_title">Recent sessions</string>
+    <string name="inactive_skills_empty">No inactive skills yet</string>
+    <string name="inactive_skill_format">%1$s – %2$d days inactive</string>
+    <string name="inactive_skills_title">Inactive skills</string>
 
     <string name="stats_today_total_short">%1$d min</string>
     <string name="stats_today_best_short">%1$d min</string>
