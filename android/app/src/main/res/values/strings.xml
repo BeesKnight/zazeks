@@ -1,64 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Skill Tracker</string>
-    <string name="skills_title">Skills</string>
-    <string name="add_skill">Add Skill</string>
-    <string name="skill_edit_title">Edit Skill</string>
-    <string name="skill_archive_button">Archive</string>
-    <string name="skill_name_required">Please provide a skill name.</string>
-    <string name="skill_updated">Skill updated</string>
-    <string name="skill_update_failed">Failed to update skill</string>
-    <string name="skill_archived">Skill archived</string>
-    <string name="skill_archive_failed">Failed to archive skill</string>
-    <string name="create_session">Create Session</string>
-    <string name="session_edit_title">Edit Session</string>
-    <string name="stats_title">Stats</string>
-    <string name="skill_details_title">Skill Details</string>
-    <string name="skill_details_title_placeholder">Skill Details</string>
-    <string name="include_archived">Include archived</string>
-    <string name="skill_archived_label">Archived</string>
-    <string name="skill_name_hint">Skill name</string>
-    <string name="skill_description_hint">Description</string>
-    <string name="skill_category_hint">Category (optional)</string>
-    <string name="skill_color_hint">Color (#RRGGBB)</string>
-    <string name="skill_name_hint_required">Skill name *</string>
-    <string name="new_skill_title">New skill</string>
-    <string name="save">Save</string>
+    <string name="action_settings">Settings</string>
+    <string name="no_skills_title">No skills yet</string>
+    <string name="no_skills_message">Tap the + button to create your first skill.</string>
     <string name="skill_created">Skill created</string>
-    <string name="skill_create_failed">Failed to create skill</string>
-    <string name="session_skill_label">Select skill</string>
-    <string name="session_duration_hint">Duration (minutes)</string>
-    <string name="session_notes_hint">Notes (optional)</string>
-    <string name="session_source_label">Source</string>
-    <string name="session_source_none">No source</string>
-    <string name="session_input_error">Please select a skill and provide duration.</string>
-    <string name="session_created">Session created</string>
-    <string name="session_create_failed">Failed to create session</string>
+    <string name="skill_updated">Skill updated</string>
+    <string name="session_created">Session saved</string>
     <string name="session_updated">Session updated</string>
-    <string name="session_update_failed">Failed to update session</string>
     <string name="session_deleted">Session deleted</string>
-    <string name="session_delete_failed">Failed to delete session</string>
-    <string name="session_delete_button">Delete</string>
-    <string name="session_difficulty_placeholder">Difficulty: Not set</string>
-    <string name="session_difficulty_value">Difficulty: %1$d</string>
-    <string name="session_date_placeholder">Session date: not selected</string>
-    <string name="session_select_date">Select date</string>
-    <string name="session_select_time">Select time</string>
-    <string name="session_clear_datetime">Clear date/time</string>
-    <string name="session_date_selected_date">Session date: %1$s</string>
-    <string name="overview_total_minutes">Total minutes</string>
-    <string name="overview_sessions_count">Sessions</string>
-    <string name="overview_skills_count">Skills</string>
-    <string name="inactive_skills_title">Inactive skills</string>
-    <string name="inactive_skills_empty">All skills are active</string>
-    <string name="inactive_skill_format">%1$s – %2$d days</string>
-    <string name="skill_details_total_minutes">Total minutes: %1$d</string>
-    <string name="skill_details_sessions">Sessions: %1$d</string>
-    <string name="skill_details_average_difficulty">Average difficulty: %1$s</string>
-    <string name="skill_details_average_difficulty_na">Average difficulty: N/A</string>
-    <string name="skill_details_daily_header">Daily minutes</string>
-    <string name="skill_details_sessions_header">Sessions</string>
-    <string name="skill_details_empty_daily">No daily data available</string>
-    <string name="skill_details_empty_sessions">No sessions found</string>
-    <string name="skill_details_daily_item">%1$s – %2$d minutes</string>
+
+    <!-- Main screen / tabs -->
+    <string name="tab_skills">Skills</string>
+    <string name="tab_stats">Stats</string>
+
+    <!-- Skill list / item -->
+    <string name="skill_item_target">%1$d %2$s</string>
+    <string name="skill_item_sessions">%1$d sessions</string>
+    <string name="skill_item_today">%1$d today</string>
+    <string name="skill_item_streak">%1$d day streak</string>
+    <string name="skill_item_add_session">Add session</string>
+
+    <!-- Skill details -->
+    <string name="skill_details_title">Skill details</string>
+    <string name="skill_details_empty_sessions">No sessions yet</string>
+    <string name="skill_details_add_session">Add session</string>
     <string name="skill_details_session_item">%1$s – %2$d minutes</string>
+    <string name="skill_details_daily_header">Today</string>
+    <string name="skill_details_sessions_header">Sessions history</string>
+
+    <!-- Skill types -->
+    <string name="skill_type_reps">Repetitions</string>
+    <string name="skill_type_time">Time</string>
+    <string name="skill_type_custom">Custom</string>
+
+    <!-- Schedules -->
+    <string name="schedule_type_daily">Daily</string>
+    <string name="schedule_type_weekly">Weekly</string>
+    <string name="schedule_type_custom">Custom</string>
+
+    <!-- Schedule chips / labels -->
+    <string name="schedule_chip_every_day">Every day</string>
+    <string name="schedule_chip_workdays">Mon–Fri</string>
+    <string name="schedule_chip_weekend">Weekend</string>
+
+    <!-- Buttons common -->
+    <string name="button_save">Save</string>
+    <string name="button_cancel">Cancel</string>
+    <string name="button_delete">Delete</string>
+    <string name="button_save_skill">Save skill</string>
+    <string name="button_save_session">Save session</string>
+
+    <!-- Session create / edit -->
+    <string name="create_session_title">New session</string>
+    <string name="session_create_title">Create session</string>
+    <string name="session_edit_title">Edit session</string>
+    <string name="session_label_skill">Skill</string>
+    <string name="session_label_date">Date and time</string>
+    <string name="session_label_value">Result / value</string>
+    <string name="session_label_notes">Notes</string>
+    <string name="session_datetime_hint">Select session date and time</string>
+    <string name="session_notes_hint">What went well? What should be improved next time?</string>
+    <string name="hint_session_date">Choose date and time</string>
+    <string name="hint_session_notes">Comment on this training session</string>
+    <string name="session_additional_info">
+        You can edit this session later in the skill details screen.
+    </string>
+    <string name="session_delete_button">Delete session</string>
+
+    <!-- Skill create / edit -->
+    <string name="create_skill_title">New skill</string>
+    <string name="skill_create_title">Create skill</string>
+
+    <string name="skill_label_name">Skill name</string>
+    <string name="label_skill_name">Skill name</string>
+    <string name="hint_skill_name">For example: Push-ups, English, Piano practice</string>
+
+    <string name="skill_label_description">Description</string>
+    <string name="label_skill_description">Description</string>
+    <string name="hint_skill_description">Short description of this skill</string>
+
+    <string name="skill_type_label">Skill type</string>
+    <string name="label_skill_type">Skill type</string>
+
+    <string name="skill_label_target">Target</string>
+    <string name="label_skill_target">Target</string>
+    <string name="skill_target_hint">Desired result, e.g. 50 repetitions</string>
+    <string name="hint_skill_target">Desired value, e.g. 50 push-ups or 30 minutes</string>
+    <string name="skill_target_unit">Unit</string>
+
+    <string name="skill_label_schedule">Schedule</string>
+    <string name="label_skill_schedule">Schedule</string>
+    <string name="skill_label_schedule_description">Practice frequency</string>
+    <string name="label_skill_schedule_description">How often do you plan to practice?</string>
+    <string name="skill_label_schedule_type">Schedule type</string>
+    <string name="label_skill_schedule_type">Schedule type</string>
+    <string name="skill_label_schedule_details">Schedule details</string>
+    <string name="label_skill_schedule_details">Schedule details</string>
+    <string name="skill_schedule_details_hint">For example: Every day after work</string>
+    <string name="hint_skill_schedule_details">
+        For example: Every day, 3 times a week, Mon/Wed/Fri
+    </string>
+
+    <string name="skill_create_additional_info">You can edit this skill later.</string>
+    <string name="skill_additional_info">
+        You can change skill parameters later in the skill details screen.
+    </string>
+    <string name="skill_schedule_additional_info">
+        The schedule is only a reminder, you can log sessions on any day.
+    </string>
+
+    <!-- Session placeholders -->
+    <string name="session_date_placeholder">Not selected</string>
+    <string name="session_value_placeholder">0</string>
+
+    <!-- Stats screen -->
+    <string name="stats_header_overview">Overview</string>
+    <string name="stats_header_today">Today</string>
+    <string name="stats_header_last_week">Last week</string>
+    <string name="stats_header_last_month">Last month</string>
+
+    <string name="stats_today_total">Today total: %1$d min</string>
+    <string name="stats_today_best">Best session: %1$d min</string>
+
+    <string name="stats_last_week_total">Total: %1$d min</string>
+    <string name="stats_last_week_best">Best day: %1$d min</string>
+
+    <string name="stats_last_month_total">Total: %1$d min</string>
+    <string name="stats_last_month_best">Best day: %1$d min</string>
+
+    <string name="stats_daily_goal_label">Daily goal</string>
+    <string name="stats_daily_info">Daily goal: %1$d minutes</string>
+    <string name="stats_daily_min">min</string>
+    <string name="stats_daily_streak">Current streak</string>
+    <string name="stats_streak_days">%1$d days</string>
+
+    <string name="stats_today_total_short">%1$d min</string>
+    <string name="stats_today_best_short">%1$d min</string>
+
+    <!-- Chart / stats misc -->
+    <string name="stats_chart_content_description">Statistics chart</string>
+
+    <!-- Generic messages -->
+    <string name="error_general">Something went wrong. Please try again.</string>
+    <string name="error_required_field">This field is required</string>
+    <string name="error_invalid_number">Enter a valid number</string>
+
+    <!-- Notification channels (если нужны) -->
+    <string name="notification_channel_reminders_name">Skill reminders</string>
+    <string name="notification_channel_reminders_description">
+        Notifications to remind you to practice your skills.
+    </string>
+
+    <!-- Misc -->
+    <string name="minutes_suffix">min</string>
 </resources>

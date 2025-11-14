@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -15,12 +16,10 @@
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/homeToolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="56dp"
+            android:layout_height="?attr/actionBarSize"
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
             app:logo="@mipmap/ic_launcher_round"
-            app:logoGravity="start"
             app:title="@string/app_name"
             app:titleTextAppearance="@style/TextAppearance.SkillTracker.Headline"
             app:titleTextColor="@color/colorOnBackground" />
@@ -40,8 +39,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingTop="8dp"
-            android:paddingBottom="24dp"
-            android:dividerPadding="0dp">
+            android:paddingBottom="24dp">
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
@@ -61,6 +59,8 @@
                     <TextView
                         android:id="@+id/todayTitle"
                         style="@style/TextAppearance.SkillTracker.Subtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:text="Today"
                         android:textAllCaps="false" />
 
@@ -81,11 +81,15 @@
                             <TextView
                                 android:id="@+id/summaryTotalMinutesValue"
                                 style="@style/TextAppearance.SkillTracker.Subtitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
                                 android:text="0" />
 
                             <TextView
                                 android:id="@+id/summaryTotalMinutesLabel"
                                 style="@style/TextAppearance.SkillTracker.Label"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
                                 android:text="@string/overview_total_minutes" />
                         </LinearLayout>
@@ -101,11 +105,15 @@
                             <TextView
                                 android:id="@+id/summarySessionsValue"
                                 style="@style/TextAppearance.SkillTracker.Subtitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
                                 android:text="0" />
 
                             <TextView
                                 android:id="@+id/summarySessionsLabel"
                                 style="@style/TextAppearance.SkillTracker.Label"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
                                 android:text="@string/overview_sessions_count" />
                         </LinearLayout>
@@ -121,11 +129,15 @@
                             <TextView
                                 android:id="@+id/summarySkillsValue"
                                 style="@style/TextAppearance.SkillTracker.Subtitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
                                 android:text="0" />
 
                             <TextView
                                 android:id="@+id/summarySkillsLabel"
                                 style="@style/TextAppearance.SkillTracker.Label"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
                                 android:text="@string/overview_skills_count" />
                         </LinearLayout>
@@ -135,6 +147,8 @@
 
             <TextView
                 style="@style/TextAppearance.SkillTracker.Subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="Actions" />
 
             <LinearLayout
@@ -178,15 +192,14 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    style="@style/TextAppearance.SkillTracker.Subtitle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/skills_title" />
+                    android:text="@string/skills_title"
+                    style="@style/TextAppearance.SkillTracker.Subtitle" />
 
                 <com.google.android.material.checkbox.MaterialCheckBox
                     android:id="@+id/includeArchivedCheckbox"
-                    style="@style/TextAppearance.SkillTracker.Label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/include_archived"
