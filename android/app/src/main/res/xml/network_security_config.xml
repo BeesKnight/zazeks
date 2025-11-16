@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
+    <!-- Разрешаем HTTP для всех вариантов локальной отладки -->
     <domain-config cleartextTrafficPermitted="true">
-        <!-- IP твоего ПК, как в BASE_URL -->
+        <!-- ADB reverse/портфорвардинг до хоста -->
+        <domain includeSubdomains="true">127.0.0.1</domain>
+
+        <!-- Android Studio эмулятор (loopback хоста) -->
+        <domain includeSubdomains="true">10.0.2.2</domain>
+
+        <!-- Подключение по Wi‑Fi напрямую к ПК -->
         <domain includeSubdomains="true">192.168.0.13</domain>
     </domain-config>
 </network-security-config>
