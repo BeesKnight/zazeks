@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.minitasker.data.model.TaskRequest
 import com.example.minitasker.data.model.TaskSummaryDto
+import com.example.minitasker.data.model.TaskPriority
+import com.example.minitasker.data.model.TaskStatus
 import com.example.minitasker.data.repository.NetworkResult
 import com.example.minitasker.data.repository.TaskRepository
 import com.example.minitasker.data.repository.safeCall
@@ -20,6 +22,7 @@ data class TasksUiState(
     val items: List<TaskSummaryDto> = emptyList(),
     val loading: Boolean = false,
     val error: String? = null,
+    val projectId: Long? = null,
     val status: TaskStatusFilter = TaskStatusFilter.ALL,
     val priority: TaskPriorityFilter = TaskPriorityFilter.ALL
 )
@@ -28,6 +31,8 @@ class TasksViewModel(private val repository: TaskRepository) : ViewModel() {
 
     private val _state = MutableStateFlow(TasksUiState())
     val state: StateFlow<TasksUiState> = _state.asStateFlow()
+
+    var onTasksChanged: ((Long) -> Unit)? = null
 
     fun loadTasks(projectId: Long) {
         viewModelScope.launch {
@@ -39,10 +44,14 @@ class TasksViewModel(private val repository: TaskRepository) : ViewModel() {
             }) {
                 is NetworkResult.Success -> _state.value = _state.value.copy(
                     loading = false,
-                    items = result.data.content
+                    items = result.data.content,
+                    projectId = projectId
                 )
                 is NetworkResult.Error -> _state.value = _state.value.copy(loading = false, error = result.message)
                 NetworkResult.Loading -> _state.value = _state.value.copy(loading = true)
+            }
+            if (_state.value.error == null) {
+                onTasksChanged?.invoke(projectId)
             }
         }
     }
@@ -59,9 +68,12 @@ class TasksViewModel(private val repository: TaskRepository) : ViewModel() {
 
     fun createTask(projectId: Long, title: String) {
         viewModelScope.launch {
-            val request = TaskRequest(title, description = null, status = "TODO", priority = "MEDIUM", assigneeId = null, dueDate = null)
+            val request = TaskRequest(title, description = null, status = TaskStatus.TODO, priority = TaskPriority.MEDIUM, assigneeId = null, dueDate = null)
             when (safeCall { repository.createTask(projectId, request) }) {
-                is NetworkResult.Success -> loadTasks(projectId)
+                is NetworkResult.Success -> {
+                    _state.value = _state.value.copy(status = TaskStatusFilter.ALL)
+                    loadTasks(projectId)
+                }
                 is NetworkResult.Error -> _state.value = _state.value.copy(error = "Не удалось создать задачу")
                 NetworkResult.Loading -> Unit
             }

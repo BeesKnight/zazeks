@@ -25,6 +25,8 @@ class TaskDetailViewModel(private val repository: TaskRepository) : ViewModel() 
     private val _state = MutableStateFlow(TaskDetailUiState())
     val state: StateFlow<TaskDetailUiState> = _state.asStateFlow()
 
+    var onTaskChanged: ((Long) -> Unit)? = null
+
     fun loadTask(taskId: Long) {
         viewModelScope.launch {
             _state.value = _state.value.copy(loading = true, error = null)
@@ -39,7 +41,10 @@ class TaskDetailViewModel(private val repository: TaskRepository) : ViewModel() 
     fun updateTask(taskId: Long, request: TaskRequest) {
         viewModelScope.launch {
             when (val result = safeCall { repository.updateTask(taskId, request) }) {
-                is NetworkResult.Success -> _state.value = _state.value.copy(task = result.data, error = null)
+                is NetworkResult.Success -> {
+                    _state.value = _state.value.copy(task = result.data, error = null)
+                    onTaskChanged?.invoke(result.data.projectId)
+                }
                 is NetworkResult.Error -> _state.value = _state.value.copy(error = result.message)
                 NetworkResult.Loading -> Unit
             }

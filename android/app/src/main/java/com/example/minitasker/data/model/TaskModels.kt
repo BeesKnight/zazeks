@@ -1,12 +1,14 @@
 package com.example.minitasker.data.model
 
-import com.squareup.moshi.Json
+enum class TaskStatus { TODO, IN_PROGRESS, DONE }
+
+enum class TaskPriority { LOW, MEDIUM, HIGH }
 
 data class TaskRequest(
     val title: String,
     val description: String?,
-    val status: String,
-    val priority: String,
+    val status: TaskStatus,
+    val priority: TaskPriority,
     val assigneeId: Long?,
     val dueDate: String?
 )
@@ -14,8 +16,8 @@ data class TaskRequest(
 data class TaskSummaryDto(
     val id: Long,
     val title: String,
-    val status: String,
-    val priority: String,
+    val status: TaskStatus,
+    val priority: TaskPriority,
     val dueDate: String?,
     val assigneeName: String?
 )
@@ -25,8 +27,8 @@ data class TaskResponseDto(
     val projectId: Long,
     val title: String,
     val description: String?,
-    val status: String,
-    val priority: String,
+    val status: TaskStatus,
+    val priority: TaskPriority,
     val assigneeId: Long?,
     val assigneeName: String?,
     val dueDate: String?,

@@ -124,7 +124,7 @@ private fun TaskItem(task: TaskSummaryDto, onClick: () -> Unit) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = task.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = "Статус: ${task.status} | Приоритет: ${task.priority}")
+            Text(text = "Статус: ${task.status.name} | Приоритет: ${task.priority.name}")
             task.assigneeName?.let { Text(text = "Исполнитель: $it") }
             task.dueDate?.let { Text(text = "Срок: $it") }
         }
