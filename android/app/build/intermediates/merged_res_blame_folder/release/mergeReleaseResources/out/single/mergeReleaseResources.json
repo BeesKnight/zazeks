@@ -1,0 +1,6 @@
+[
+    {
+        "merged": "com.example.minitasker.app-release-50:/xml_network_security_config.xml.flat",
+        "source": "com.example.minitasker.app-main-51:/xml/network_security_config.xml"
+    }
+]
