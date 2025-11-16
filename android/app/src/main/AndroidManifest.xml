@@ -10,9 +10,7 @@
         android:icon="@android:drawable/sym_def_app_icon"
         android:label="MiniTasker"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.Material.NoActionBar"
-        android:usesCleartextTraffic="true"
-        android:networkSecurityConfig="@xml/network_security_config">
+        android:theme="@android:style/Theme.Material.NoActionBar">
 
         <activity
             android:name="com.example.minitasker.MainActivity"

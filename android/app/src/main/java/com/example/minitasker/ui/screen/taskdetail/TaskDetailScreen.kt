@@ -31,6 +31,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.minitasker.data.model.TaskRequest
+import com.example.minitasker.data.model.TaskPriority
+import com.example.minitasker.data.model.TaskStatus
 
 @Composable
 fun TaskDetailScreen(taskId: Long, viewModel: TaskDetailViewModel) {
@@ -52,32 +54,32 @@ fun TaskDetailScreen(taskId: Long, viewModel: TaskDetailViewModel) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = task.description ?: "Нет описания")
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "Статус: ${task.status}")
-            Text(text = "Приоритет: ${task.priority}")
+            Text(text = "Статус: ${task.status.name}")
+            Text(text = "Приоритет: ${task.priority.name}")
             task.assigneeName?.let { Text(text = "Исполнитель: $it") }
             task.dueDate?.let { Text(text = "Срок: $it") }
             Spacer(modifier = Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                StatusChip(label = "TODO", selected = task.status == "TODO") {
-                    viewModel.updateTask(taskId, task.toRequest(status = "TODO"))
+                StatusChip(label = "TODO", selected = task.status == TaskStatus.TODO) {
+                    viewModel.updateTask(taskId, task.toRequest(status = TaskStatus.TODO))
                 }
-                StatusChip(label = "IN_PROGRESS", selected = task.status == "IN_PROGRESS") {
-                    viewModel.updateTask(taskId, task.toRequest(status = "IN_PROGRESS"))
+                StatusChip(label = "IN_PROGRESS", selected = task.status == TaskStatus.IN_PROGRESS) {
+                    viewModel.updateTask(taskId, task.toRequest(status = TaskStatus.IN_PROGRESS))
                 }
-                StatusChip(label = "DONE", selected = task.status == "DONE") {
-                    viewModel.updateTask(taskId, task.toRequest(status = "DONE"))
+                StatusChip(label = "DONE", selected = task.status == TaskStatus.DONE) {
+                    viewModel.updateTask(taskId, task.toRequest(status = TaskStatus.DONE))
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                StatusChip(label = "LOW", selected = task.priority == "LOW") {
-                    viewModel.updateTask(taskId, task.toRequest(priority = "LOW"))
+                StatusChip(label = "LOW", selected = task.priority == TaskPriority.LOW) {
+                    viewModel.updateTask(taskId, task.toRequest(priority = TaskPriority.LOW))
                 }
-                StatusChip(label = "MEDIUM", selected = task.priority == "MEDIUM") {
-                    viewModel.updateTask(taskId, task.toRequest(priority = "MEDIUM"))
+                StatusChip(label = "MEDIUM", selected = task.priority == TaskPriority.MEDIUM) {
+                    viewModel.updateTask(taskId, task.toRequest(priority = TaskPriority.MEDIUM))
                 }
-                StatusChip(label = "HIGH", selected = task.priority == "HIGH") {
-                    viewModel.updateTask(taskId, task.toRequest(priority = "HIGH"))
+                StatusChip(label = "HIGH", selected = task.priority == TaskPriority.HIGH) {
+                    viewModel.updateTask(taskId, task.toRequest(priority = TaskPriority.HIGH))
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -131,8 +133,8 @@ fun TaskDetailScreen(taskId: Long, viewModel: TaskDetailViewModel) {
 }
 
 private fun com.example.minitasker.data.model.TaskResponseDto.toRequest(
-    status: String = this.status,
-    priority: String = this.priority
+    status: TaskStatus = this.status,
+    priority: TaskPriority = this.priority
 ): TaskRequest {
     return TaskRequest(
         title = this.title,

@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +51,11 @@ fun MiniTaskerNavHost(app: MiniTaskerApplication) {
     val tasksViewModel: TasksViewModel = viewModel(factory = SimpleFactory { TasksViewModel(app.taskRepository) })
     val taskDetailViewModel: TaskDetailViewModel = viewModel(factory = SimpleFactory { TaskDetailViewModel(app.taskRepository) })
     val statsViewModel: StatsViewModel = viewModel(factory = SimpleFactory { StatsViewModel(app.statsRepository) })
+
+    LaunchedEffect(Unit) {
+        tasksViewModel.onTasksChanged = { projectId -> statsViewModel.load(projectId) }
+        taskDetailViewModel.onTaskChanged = { projectId -> statsViewModel.load(projectId) }
+    }
 
     NavHost(navController = navController, startDestination = Screen.Auth.route) {
         composable(Screen.Auth.route) {
