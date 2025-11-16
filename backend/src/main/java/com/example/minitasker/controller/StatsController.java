@@ -20,12 +20,12 @@ public class StatsController {
     }
 
     @GetMapping("/tasks-by-status")
-    public ResponseEntity<List<KeyValueStat>> tasksByStatus(@RequestParam Long projectId) {
+    public ResponseEntity<List<KeyValueStat>> tasksByStatus(@RequestParam("projectId") Long projectId) {
         return ResponseEntity.ok(statsService.tasksByStatus(projectId));
     }
 
     @GetMapping("/tasks-by-priority")
-    public ResponseEntity<List<KeyValueStat>> tasksByPriority(@RequestParam Long projectId) {
+    public ResponseEntity<List<KeyValueStat>> tasksByPriority(@RequestParam("projectId") Long projectId) {
         return ResponseEntity.ok(statsService.tasksByPriority(projectId));
     }
 }

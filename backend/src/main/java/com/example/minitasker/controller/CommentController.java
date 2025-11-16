@@ -24,12 +24,12 @@ public class CommentController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CommentResponse>> listComments(@PathVariable Long taskId) {
+    public ResponseEntity<List<CommentResponse>> listComments(@PathVariable("taskId") Long taskId) {
         return ResponseEntity.ok(commentService.getComments(taskId));
     }
 
     @PostMapping
-    public ResponseEntity<CommentResponse> createComment(@PathVariable Long taskId,
+    public ResponseEntity<CommentResponse> createComment(@PathVariable("taskId") Long taskId,
                                                          @Valid @RequestBody CommentRequest request) {
         return ResponseEntity.ok(commentService.addComment(taskId, request));
     }

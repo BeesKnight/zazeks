@@ -27,19 +27,19 @@ public class AttachmentController {
     }
 
     @GetMapping("/tasks/{taskId}/attachments")
-    public ResponseEntity<List<AttachmentResponse>> listAttachments(@PathVariable Long taskId) {
+    public ResponseEntity<List<AttachmentResponse>> listAttachments(@PathVariable("taskId") Long taskId) {
         return ResponseEntity.ok(attachmentService.listAttachments(taskId));
     }
 
     @PostMapping(value = "/tasks/{taskId}/attachments", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<AttachmentResponse> uploadAttachment(@PathVariable Long taskId,
+    public ResponseEntity<AttachmentResponse> uploadAttachment(@PathVariable("taskId") Long taskId,
                                                                @RequestParam("file") MultipartFile file)
             throws IOException {
         return ResponseEntity.ok(attachmentService.uploadAttachment(taskId, file));
     }
 
     @GetMapping("/attachments/{attachmentId}")
-    public ResponseEntity<Resource> downloadAttachment(@PathVariable Long attachmentId) {
+    public ResponseEntity<Resource> downloadAttachment(@PathVariable("attachmentId") Long attachmentId) {
         Resource resource = attachmentService.downloadAttachment(attachmentId);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + resource.getFilename())
