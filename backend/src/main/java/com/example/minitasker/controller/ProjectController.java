@@ -29,15 +29,15 @@ public class ProjectController {
     }
 
     @GetMapping
-    public ResponseEntity<PageResponse<ProjectResponse>> listProjects(@RequestParam(required = false) String name,
-                                                                      @RequestParam(defaultValue = "0") int page,
-                                                                      @RequestParam(defaultValue = "20") int size) {
+    public ResponseEntity<PageResponse<ProjectResponse>> listProjects(@RequestParam(value = "name", required = false) String name,
+                                                                      @RequestParam(value = "page", defaultValue = "0") int page,
+                                                                      @RequestParam(value = "size", defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(projectService.getProjects(name, pageable));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProjectResponse> getProject(@PathVariable Long id) {
+    public ResponseEntity<ProjectResponse> getProject(@PathVariable("id") Long id) {
         return ResponseEntity.ok(projectService.getProject(id));
     }
 
@@ -47,13 +47,13 @@ public class ProjectController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProjectResponse> updateProject(@PathVariable Long id,
+    public ResponseEntity<ProjectResponse> updateProject(@PathVariable("id") Long id,
                                                          @Valid @RequestBody ProjectRequest request) {
         return ResponseEntity.ok(projectService.updateProject(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteProject(@PathVariable("id") Long id) {
         projectService.deleteProject(id);
         return ResponseEntity.noContent().build();
     }

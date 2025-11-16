@@ -21,7 +21,7 @@ public class ReportController {
     }
 
     @GetMapping(value = "/tasks/csv", produces = "text/csv")
-    public ResponseEntity<Resource> downloadCsv(@RequestParam Long projectId) {
+    public ResponseEntity<Resource> downloadCsv(@RequestParam("projectId") Long projectId) {
         Resource resource = reportService.generateTasksCsv(projectId);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + resource.getFilename())

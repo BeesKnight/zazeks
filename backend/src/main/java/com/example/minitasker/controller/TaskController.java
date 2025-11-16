@@ -30,35 +30,35 @@ public class TaskController {
     }
 
     @GetMapping("/projects/{projectId}/tasks")
-    public ResponseEntity<PageResponse<TaskSummary>> listTasks(@PathVariable Long projectId,
-                                                               @RequestParam(required = false) String status,
-                                                               @RequestParam(required = false) String priority,
-                                                               @RequestParam(required = false) Long assigneeId,
-                                                               @RequestParam(defaultValue = "0") int page,
-                                                               @RequestParam(defaultValue = "20") int size) {
+    public ResponseEntity<PageResponse<TaskSummary>> listTasks(@PathVariable("projectId") Long projectId,
+                                                               @RequestParam(value = "status", required = false) String status,
+                                                               @RequestParam(value = "priority", required = false) String priority,
+                                                               @RequestParam(value = "assigneeId", required = false) Long assigneeId,
+                                                               @RequestParam(value = "page", defaultValue = "0") int page,
+                                                               @RequestParam(value = "size", defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(taskService.getTasks(projectId, status, priority, assigneeId, pageable));
     }
 
     @PostMapping("/projects/{projectId}/tasks")
-    public ResponseEntity<TaskResponse> createTask(@PathVariable Long projectId,
+    public ResponseEntity<TaskResponse> createTask(@PathVariable("projectId") Long projectId,
                                                    @Valid @RequestBody TaskRequest request) {
         return ResponseEntity.ok(taskService.createTask(projectId, request));
     }
 
     @GetMapping("/tasks/{taskId}")
-    public ResponseEntity<TaskResponse> getTask(@PathVariable Long taskId) {
+    public ResponseEntity<TaskResponse> getTask(@PathVariable("taskId") Long taskId) {
         return ResponseEntity.ok(taskService.getTask(taskId));
     }
 
     @PutMapping("/tasks/{taskId}")
-    public ResponseEntity<TaskResponse> updateTask(@PathVariable Long taskId,
+    public ResponseEntity<TaskResponse> updateTask(@PathVariable("taskId") Long taskId,
                                                    @Valid @RequestBody TaskRequest request) {
         return ResponseEntity.ok(taskService.updateTask(taskId, request));
     }
 
     @DeleteMapping("/tasks/{taskId}")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long taskId) {
+    public ResponseEntity<Void> deleteTask(@PathVariable("taskId") Long taskId) {
         taskService.deleteTask(taskId);
         return ResponseEntity.noContent().build();
     }
