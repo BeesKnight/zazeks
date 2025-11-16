@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<network-security-config>
-    <domain-config cleartextTrafficPermitted="true">
-        <!-- IP твоего ПК, как в BASE_URL -->
-        <domain includeSubdomains="true">192.168.0.13</domain>
-    </domain-config>
-</network-security-config>
