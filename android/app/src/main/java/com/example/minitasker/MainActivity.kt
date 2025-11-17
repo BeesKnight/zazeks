@@ -7,10 +7,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -28,13 +24,14 @@ import com.example.minitasker.ui.screen.taskdetail.TaskDetailScreen
 import com.example.minitasker.ui.screen.taskdetail.TaskDetailViewModel
 import com.example.minitasker.ui.screen.tasks.TasksScreen
 import com.example.minitasker.ui.screen.tasks.TasksViewModel
+import com.example.minitasker.ui.theme.MiniTaskerTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val app = application as MiniTaskerApplication
         setContent {
-            MaterialTheme {
+            MiniTaskerTheme {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     MiniTaskerNavHost(app)
                 }
