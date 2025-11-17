@@ -46,6 +46,20 @@ MiniTasker — учебный full-stack проект, состоящий из b
    (или `mvn spring-boot:run`, если Maven установлен глобально).
 3. API доступно на `http://localhost:8080`.
 
+## Запуск backend в Docker
+1. Установите [Docker](https://docs.docker.com/get-docker/) и [Docker Compose](https://docs.docker.com/compose/install/).
+2. Соберите образ вручную (контекст — каталог `backend`):
+   ```bash
+   docker build -t minitasker-backend ./backend
+   ```
+3. Поднимите backend вместе с PostgreSQL при помощи docker compose (команда автоматически стартует и сервис `postgres` благодаря `depends_on`):
+   ```bash
+   docker compose up backend
+   ```
+   Образы будут собраны, после чего backend станет доступен, а данные PostgreSQL сохранятся в томе `postgres-data`.
+4. API доступно на `http://localhost:8080` (порт проброшен из контейнера `backend`).
+5. Для Android-эмулятора ничего менять не нужно — он по-прежнему обращается к `http://10.0.2.2:8080`, поэтому при пробросе `8080:8080` всё работает как и при локальном запуске.
+
 ## Сборка и запуск Android-клиента
 1. Откройте каталог `android/` в Android Studio (Giraffe+).
 2. Убедитесь, что устройство/эмулятор могут обратиться к backend (`10.0.2.2:8080` для эмулятора, при необходимости измените `ServiceLocator.BASE_URL`).
