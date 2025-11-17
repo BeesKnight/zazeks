@@ -13,22 +13,33 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun PrimaryButton(text: String, onClick: () -> Unit, enabled: Boolean = true) {
-    Button(onClick = onClick, modifier = Modifier
-        .fillMaxWidth()
-        .padding(vertical = 8.dp), enabled = enabled) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        enabled = enabled,
+        shape = MaterialTheme.shapes.medium
+    ) {
         Text(text = text)
     }
 }
 
 @Composable
-fun LabeledTextField(value: String, onValueChange: (String) -> Unit, label: String, isPassword: Boolean = false) {
+fun LabeledTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    isPassword: Boolean = false,
+    modifier: Modifier = Modifier
+) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label) },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        modifier = modifier.fillMaxWidth(),
+        singleLine = true,
+        shape = MaterialTheme.shapes.medium,
         visualTransformation = if (isPassword) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None
     )
 }
