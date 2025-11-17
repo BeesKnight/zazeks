@@ -27,6 +27,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.minitasker.data.model.TaskPriority
+import com.example.minitasker.data.model.TaskStatus
 import com.example.minitasker.data.model.TaskSummaryDto
 
 @Composable
@@ -76,7 +78,7 @@ fun TasksScreen(
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
-        Row {
+        Row { 
             androidx.compose.material3.OutlinedTextField(
                 value = newTaskTitle,
                 onValueChange = { newTaskTitle = it },
@@ -94,9 +96,42 @@ fun TasksScreen(
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
+        Text(text = "Статус новой задачи", fontWeight = FontWeight.SemiBold)
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(label = "Сделать", selected = state.newTaskStatus == TaskStatus.TODO) {
+                viewModel.selectNewTaskStatus(TaskStatus.TODO)
+            }
+            FilterChip(label = "Готово", selected = state.newTaskStatus == TaskStatus.DONE) {
+                viewModel.selectNewTaskStatus(TaskStatus.DONE)
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(text = "Приоритет новой задачи", fontWeight = FontWeight.SemiBold)
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(label = "Низкий", selected = state.newTaskPriority == TaskPriority.LOW) {
+                viewModel.selectNewTaskPriority(TaskPriority.LOW)
+            }
+            FilterChip(label = "Средний", selected = state.newTaskPriority == TaskPriority.MEDIUM) {
+                viewModel.selectNewTaskPriority(TaskPriority.MEDIUM)
+            }
+            FilterChip(label = "Высокий", selected = state.newTaskPriority == TaskPriority.HIGH) {
+                viewModel.selectNewTaskPriority(TaskPriority.HIGH)
+            }
+        }
+        Spacer(modifier = Modifier.height(12.dp))
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(state.items) { task ->
-                TaskItem(task = task, onClick = { onTaskSelected(task.id) })
+                TaskItem(
+                    task = task,
+                    onClick = { onTaskSelected(task.id) },
+                    onTakeTask = if (task.status == TaskStatus.TODO) {
+                        { viewModel.takeTask(projectId, task.id) }
+                    } else {
+                        null
+                    }
+                )
             }
         }
     }
@@ -114,7 +149,7 @@ private fun FilterChip(label: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun TaskItem(task: TaskSummaryDto, onClick: () -> Unit) {
+private fun TaskItem(task: TaskSummaryDto, onClick: () -> Unit, onTakeTask: (() -> Unit)? = null) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -124,9 +159,27 @@ private fun TaskItem(task: TaskSummaryDto, onClick: () -> Unit) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = task.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = "Статус: ${task.status.name} | Приоритет: ${task.priority.name}")
+            Text(text = "Статус: ${task.status.toDisplayName()} | Приоритет: ${task.priority.toDisplayName()}")
             task.assigneeName?.let { Text(text = "Исполнитель: $it") }
             task.dueDate?.let { Text(text = "Срок: $it") }
+            onTakeTask?.let {
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(onClick = it) {
+                    Text("Взять задачу")
+                }
+            }
         }
     }
+}
+
+private fun TaskStatus.toDisplayName(): String = when (this) {
+    TaskStatus.TODO -> "Сделать"
+    TaskStatus.IN_PROGRESS -> "В работе"
+    TaskStatus.DONE -> "Готово"
+}
+
+private fun TaskPriority.toDisplayName(): String = when (this) {
+    TaskPriority.LOW -> "Низкий"
+    TaskPriority.MEDIUM -> "Средний"
+    TaskPriority.HIGH -> "Высокий"
 }

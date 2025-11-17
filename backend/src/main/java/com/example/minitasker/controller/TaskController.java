@@ -46,6 +46,12 @@ public class TaskController {
         return ResponseEntity.ok(taskService.createTask(projectId, request));
     }
 
+    @PostMapping("/projects/{projectId}/tasks/{taskId}/take")
+    public ResponseEntity<TaskResponse> takeTask(@PathVariable("projectId") Long projectId,
+                                                 @PathVariable("taskId") Long taskId) {
+        return ResponseEntity.ok(taskService.takeTask(projectId, taskId));
+    }
+
     @GetMapping("/tasks/{taskId}")
     public ResponseEntity<TaskResponse> getTask(@PathVariable("taskId") Long taskId) {
         return ResponseEntity.ok(taskService.getTask(taskId));

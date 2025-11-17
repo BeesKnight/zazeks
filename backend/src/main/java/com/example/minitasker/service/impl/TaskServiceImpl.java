@@ -127,6 +127,28 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    public TaskResponse takeTask(Long projectId, Long taskId) {
+        Project project = loadProjectForCurrentUser(projectId);
+        Task task = taskRepository.findByIdAndProject(taskId, project)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+
+        if (task.getStatus() != TaskStatus.TODO) {
+            throw new BadRequestException("Task is not available for taking");
+        }
+
+        User current = SecurityUtils.getCurrentUser();
+        User assignee = userRepository.findById(current.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        task.setStatus(TaskStatus.IN_PROGRESS);
+        task.setAssignee(assignee);
+
+        Task saved = taskRepository.save(task);
+        log.info("Task {} taken by {}", saved.getId(), assignee.getId());
+        return mapToResponse(saved);
+    }
+
+    @Override
     public void deleteTask(Long id) {
         Task task = loadTaskForCurrentUser(id);
         taskRepository.delete(task);
