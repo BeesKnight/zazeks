@@ -19,3 +19,6 @@ android/local.properties
 *.apk
 *.aab
 android/app/debug/app-debug.apk
+
+# Maven
+backend/target/
