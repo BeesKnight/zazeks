@@ -24,7 +24,9 @@ data class TasksUiState(
     val error: String? = null,
     val projectId: Long? = null,
     val status: TaskStatusFilter = TaskStatusFilter.ALL,
-    val priority: TaskPriorityFilter = TaskPriorityFilter.ALL
+    val priority: TaskPriorityFilter = TaskPriorityFilter.ALL,
+    val newTaskStatus: TaskStatus = TaskStatus.TODO,
+    val newTaskPriority: TaskPriority = TaskPriority.MEDIUM
 )
 
 class TasksViewModel(private val repository: TaskRepository) : ViewModel() {
@@ -66,15 +68,41 @@ class TasksViewModel(private val repository: TaskRepository) : ViewModel() {
         loadTasks(projectId)
     }
 
+    fun selectNewTaskStatus(status: TaskStatus) {
+        _state.value = _state.value.copy(newTaskStatus = status)
+    }
+
+    fun selectNewTaskPriority(priority: TaskPriority) {
+        _state.value = _state.value.copy(newTaskPriority = priority)
+    }
+
     fun createTask(projectId: Long, title: String) {
         viewModelScope.launch {
-            val request = TaskRequest(title, description = null, status = TaskStatus.TODO, priority = TaskPriority.MEDIUM, assigneeId = null, dueDate = null)
+            val currentState = _state.value
+            val request = TaskRequest(
+                title = title,
+                description = null,
+                status = currentState.newTaskStatus,
+                priority = currentState.newTaskPriority,
+                assigneeId = null,
+                dueDate = null
+            )
             when (safeCall { repository.createTask(projectId, request) }) {
                 is NetworkResult.Success -> {
                     _state.value = _state.value.copy(status = TaskStatusFilter.ALL)
                     loadTasks(projectId)
                 }
                 is NetworkResult.Error -> _state.value = _state.value.copy(error = "Не удалось создать задачу")
+                NetworkResult.Loading -> Unit
+            }
+        }
+    }
+
+    fun takeTask(projectId: Long, taskId: Long) {
+        viewModelScope.launch {
+            when (val result = safeCall { repository.takeTask(projectId, taskId) }) {
+                is NetworkResult.Success -> loadTasks(projectId)
+                is NetworkResult.Error -> _state.value = _state.value.copy(error = result.message)
                 NetworkResult.Loading -> Unit
             }
         }

@@ -77,6 +77,12 @@ interface ApiService {
     @DELETE("/api/tasks/{taskId}")
     suspend fun deleteTask(@Path("taskId") taskId: Long)
 
+    @POST("/api/projects/{projectId}/tasks/{taskId}/take")
+    suspend fun takeTask(
+        @Path("projectId") projectId: Long,
+        @Path("taskId") taskId: Long
+    ): TaskResponseDto
+
     // Comments
     @GET("/api/tasks/{taskId}/comments")
     suspend fun getComments(@Path("taskId") taskId: Long): List<CommentDto>

@@ -46,6 +46,10 @@ class TaskRepository(private val context: Context, private val apiService: ApiSe
         apiService.deleteTask(taskId)
     }
 
+    suspend fun takeTask(projectId: Long, taskId: Long): TaskResponseDto {
+        return apiService.takeTask(projectId, taskId)
+    }
+
     suspend fun getComments(taskId: Long): List<CommentDto> {
         return apiService.getComments(taskId)
     }
