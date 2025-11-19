@@ -10,5 +10,8 @@
 
         <!-- Подключение по Wi‑Fi напрямую к ПК -->
         <domain includeSubdomains="true">192.168.0.13</domain>
+
+        <!-- Публичный сервер -->
+        <domain includeSubdomains="true">45.155.207.118</domain>
     </domain-config>
 </network-security-config>
