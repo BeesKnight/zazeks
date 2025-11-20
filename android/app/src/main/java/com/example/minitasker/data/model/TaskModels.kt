@@ -56,7 +56,7 @@ data class AttachmentDto(
     val fileName: String,
     val contentType: String,
     val url: String?,
-    val downloadUrl: String,
+    val downloadUrl: String? = null,
     val uploadedAt: String
 )
 
