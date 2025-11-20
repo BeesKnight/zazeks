@@ -6,11 +6,13 @@ public class AttachmentDownload {
     private final Resource resource;
     private final String contentType;
     private final String fileName;
+    private final Long contentLength;
 
-    public AttachmentDownload(Resource resource, String contentType, String fileName) {
+    public AttachmentDownload(Resource resource, String contentType, String fileName, Long contentLength) {
         this.resource = resource;
         this.contentType = contentType;
         this.fileName = fileName;
+        this.contentLength = contentLength;
     }
 
     public Resource getResource() {
@@ -23,5 +25,9 @@ public class AttachmentDownload {
 
     public String getFileName() {
         return fileName;
+    }
+
+    public Long getContentLength() {
+        return contentLength;
     }
 }

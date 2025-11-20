@@ -6,9 +6,12 @@ import com.example.minitasker.exception.BadRequestException;
 import com.example.minitasker.exception.ResourceNotFoundException;
 import com.example.minitasker.model.Attachment;
 import com.example.minitasker.model.Task;
+import com.example.minitasker.model.User;
+import com.example.minitasker.model.enums.Role;
 import com.example.minitasker.repository.AttachmentRepository;
 import com.example.minitasker.repository.TaskRepository;
 import com.example.minitasker.service.AttachmentService;
+import com.example.minitasker.util.SecurityUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -73,16 +76,33 @@ public class AttachmentServiceImpl implements AttachmentService {
         Attachment attachment = attachmentRepository.findById(attachmentId)
                 .filter(att -> att.getTask().getId().equals(task.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Attachment not found"));
+        Resource resource = new FileSystemResource(Paths.get(attachment.getFilePath()));
+        Long contentLength = null;
+        try {
+            contentLength = resource.contentLength();
+        } catch (IOException ignored) {
+        }
         return new AttachmentDownload(
-                new FileSystemResource(Paths.get(attachment.getFilePath())),
+                resource,
                 attachment.getContentType(),
-                attachment.getFileName()
+                attachment.getFileName(),
+                contentLength
         );
     }
 
     private Task loadTask(Long id) {
-        return taskRepository.findById(id)
+        Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+        User current = SecurityUtils.getCurrentUser();
+        if (current.getRole() == Role.ADMIN) {
+            return task;
+        }
+        boolean owner = task.getProject().getOwner().getId().equals(current.getId());
+        boolean assigned = task.getAssignee() != null && task.getAssignee().getId().equals(current.getId());
+        if (!owner && !assigned) {
+            throw new ResourceNotFoundException("Task not found");
+        }
+        return task;
     }
 
     private AttachmentResponse mapToDto(Attachment attachment) {
@@ -91,7 +111,9 @@ public class AttachmentServiceImpl implements AttachmentService {
         response.setTaskId(attachment.getTask().getId());
         response.setFileName(attachment.getFileName());
         response.setContentType(attachment.getContentType());
-        response.setUrl("/api/tasks/" + attachment.getTask().getId() + "/attachments/" + attachment.getId());
+        String downloadPath = "/api/tasks/" + attachment.getTask().getId() + "/attachments/" + attachment.getId();
+        response.setUrl(downloadPath);
+        response.setDownloadUrl(downloadPath + "/download");
         response.setUploadedAt(attachment.getUploadedAt());
         return response;
     }
