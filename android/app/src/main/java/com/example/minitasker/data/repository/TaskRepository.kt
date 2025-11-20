@@ -81,7 +81,10 @@ class TaskRepository(
     }
 
     fun resolveAttachmentUrl(attachment: AttachmentDto): String {
-        val url = attachment.downloadUrl.ifBlank { attachment.url.orEmpty() }
+        val url = attachment.downloadUrl?.takeIf { it.isNotBlank() }
+            ?: attachment.url?.takeIf { it.isNotBlank() }
+            ?: "/api/tasks/${attachment.taskId ?: ""}/attachments/${attachment.id}"
+
         return if (url.startsWith("http")) {
             url
         } else {
