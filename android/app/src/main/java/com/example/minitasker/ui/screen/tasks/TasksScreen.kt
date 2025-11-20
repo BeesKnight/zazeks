@@ -427,7 +427,8 @@ private fun TasksScreenPreview() {
             onTaskSelected = {},
             onTakeTask = {},
             onNewTaskStatusSelected = {},
-            onNewTaskPrioritySelected = {}
+            onNewTaskPrioritySelected = {},
+            onRefresh = {}
         )
     }
 }

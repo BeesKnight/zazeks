@@ -242,12 +242,16 @@ private fun ProjectsScreenPreview() {
             ProjectDto(1, "Новый маркетинг", "Запуск летней кампании", 1, "Анна", ""),
             ProjectDto(2, "Мобильное приложение", "Версия 2.0", 2, "Иван", "")
         )
+        val snackbarHostState = remember { SnackbarHostState() }
         ProjectsScreenContent(
             state = ProjectsUiState(projects = sampleProjects),
             onProjectSelected = {},
             onShowStats = {},
             onCreateProject = {},
-            onLogout = {}
+            onLogout = {},
+            onDeleteProject = {},
+            onRefresh = {},
+            snackbarHostState = snackbarHostState
         )
     }
 }

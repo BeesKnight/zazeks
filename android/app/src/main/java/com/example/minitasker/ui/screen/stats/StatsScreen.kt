@@ -277,7 +277,8 @@ private fun StatsScreenPreview() {
             state = StatsUiState(
                 statusStats = statusStats,
                 priorityStats = priorityStats
-            )
+            ),
+            onRefresh = {}
         )
     }
 }
