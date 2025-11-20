@@ -25,8 +25,7 @@ minitasker:
   security:
     jwt-secret: change-me-please-change-me-please-change-me-please
     jwt-expiration-minutes: 60
-  storage:
-    upload-dir: ./uploads
+  attachments-dir: /data/attachments
 
 server:
   address: 0.0.0.0
