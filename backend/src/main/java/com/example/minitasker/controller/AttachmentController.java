@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.List;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
@@ -56,7 +57,11 @@ public class AttachmentController {
         var download = attachmentService.downloadAttachment(taskId, attachmentId);
         MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
         if (StringUtils.hasText(download.getContentType())) {
-            mediaType = MediaType.parseMediaType(download.getContentType());
+            try {
+                mediaType = MediaType.parseMediaType(download.getContentType());
+            } catch (InvalidMediaTypeException ignored) {
+                mediaType = MediaType.APPLICATION_OCTET_STREAM;
+            }
         } else if (StringUtils.hasText(download.getFileName())) {
             mediaType = MediaTypeFactory.getMediaType(download.getFileName())
                     .orElse(MediaType.APPLICATION_OCTET_STREAM);

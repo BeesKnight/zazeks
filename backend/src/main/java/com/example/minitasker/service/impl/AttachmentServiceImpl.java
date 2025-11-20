@@ -76,7 +76,14 @@ public class AttachmentServiceImpl implements AttachmentService {
         Attachment attachment = attachmentRepository.findById(attachmentId)
                 .filter(att -> att.getTask().getId().equals(task.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Attachment not found"));
-        Resource resource = new FileSystemResource(Paths.get(attachment.getFilePath()));
+        Path filePath = Paths.get(attachment.getFilePath()).normalize();
+        if (!filePath.toAbsolutePath().startsWith(storagePath)) {
+            throw new ResourceNotFoundException("Attachment not found");
+        }
+        Resource resource = new FileSystemResource(filePath);
+        if (!resource.exists() || !resource.isReadable()) {
+            throw new ResourceNotFoundException("Attachment file not found");
+        }
         Long contentLength = null;
         try {
             contentLength = resource.contentLength();
