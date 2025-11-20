@@ -9,5 +9,5 @@ import org.springframework.web.multipart.MultipartFile;
 public interface AttachmentService {
     List<AttachmentResponse> listAttachments(Long taskId);
     AttachmentResponse uploadAttachment(Long taskId, MultipartFile file) throws IOException;
-    Resource downloadAttachment(Long attachmentId);
+    AttachmentDownload downloadAttachment(Long taskId, Long attachmentId);
 }

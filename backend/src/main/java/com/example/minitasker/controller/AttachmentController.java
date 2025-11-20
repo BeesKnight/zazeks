@@ -38,11 +38,18 @@ public class AttachmentController {
         return ResponseEntity.ok(attachmentService.uploadAttachment(taskId, file));
     }
 
-    @GetMapping("/attachments/{attachmentId}")
-    public ResponseEntity<Resource> downloadAttachment(@PathVariable("attachmentId") Long attachmentId) {
-        Resource resource = attachmentService.downloadAttachment(attachmentId);
+    @GetMapping("/tasks/{taskId}/attachments/{attachmentId}")
+    public ResponseEntity<Resource> downloadAttachment(@PathVariable("taskId") Long taskId,
+                                                       @PathVariable("attachmentId") Long attachmentId) {
+        var download = attachmentService.downloadAttachment(taskId, attachmentId);
+        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        if (download.getContentType() != null) {
+            mediaType = MediaType.parseMediaType(download.getContentType());
+        }
+        String fileName = download.getFileName() != null ? download.getFileName() : "attachment";
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + resource.getFilename())
-                .body(resource);
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .body(download.getResource());
     }
 }

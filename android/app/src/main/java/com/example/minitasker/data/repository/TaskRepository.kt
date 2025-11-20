@@ -17,7 +17,11 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 
-class TaskRepository(private val context: Context, private val apiService: ApiService) {
+class TaskRepository(
+    private val context: Context,
+    private val apiService: ApiService,
+    private val baseUrl: String
+) {
 
     suspend fun loadTasks(
         projectId: Long,
@@ -71,6 +75,15 @@ class TaskRepository(private val context: Context, private val apiService: ApiSe
         val requestBody: RequestBody = bytes.toRequestBody(mime.toMediaTypeOrNull())
         val part = MultipartBody.Part.createFormData("file", fileName, requestBody)
         return apiService.uploadAttachment(taskId, part)
+    }
+
+    fun resolveAttachmentUrl(attachment: AttachmentDto): String {
+        val url = attachment.url
+        return if (url.startsWith("http")) {
+            url
+        } else {
+            baseUrl.trimEnd('/') + url
+        }
     }
 
     private fun resolveFileName(resolver: ContentResolver, uri: Uri): String? {

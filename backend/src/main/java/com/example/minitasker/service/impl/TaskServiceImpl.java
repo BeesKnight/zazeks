@@ -11,7 +11,6 @@ import com.example.minitasker.model.Comment;
 import com.example.minitasker.model.Project;
 import com.example.minitasker.model.Task;
 import com.example.minitasker.model.User;
-import com.example.minitasker.model.enums.Role;
 import com.example.minitasker.model.enums.TaskPriority;
 import com.example.minitasker.model.enums.TaskStatus;
 import com.example.minitasker.repository.CommentRepository;
@@ -58,7 +57,7 @@ public class TaskServiceImpl implements TaskService {
                                               String priority,
                                               Long assigneeId,
                                               Pageable pageable) {
-        Project project = loadProjectForCurrentUser(projectId);
+        Project project = loadProject(projectId);
         Specification<Task> spec = Specification.where(
                 (root, query, cb) -> cb.equal(root.get("project"), project)
         );
@@ -102,13 +101,13 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional(readOnly = true)
     public TaskResponse getTask(Long id) {
-        Task task = loadTaskForCurrentUser(id);
+        Task task = loadTask(id);
         return mapToResponse(task);
     }
 
     @Override
     public TaskResponse createTask(Long projectId, TaskRequest request) {
-        Project project = loadProjectForCurrentUser(projectId);
+        Project project = loadProject(projectId);
         Task task = new Task();
         task.setProject(project);
         applyTaskRequest(task, request);
@@ -119,7 +118,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskResponse updateTask(Long taskId, TaskRequest request) {
-        Task task = loadTaskForCurrentUser(taskId);
+        Task task = loadTask(taskId);
         applyTaskRequest(task, request);
         Task updated = taskRepository.save(task);
         log.info("Task updated: {}", updated.getId());
@@ -128,7 +127,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskResponse takeTask(Long projectId, Long taskId) {
-        Project project = loadProjectForCurrentUser(projectId);
+        Project project = loadProject(projectId);
         Task task = taskRepository.findByIdAndProject(taskId, project)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
 
@@ -136,8 +135,7 @@ public class TaskServiceImpl implements TaskService {
             throw new BadRequestException("Task is not available for taking");
         }
 
-        User current = SecurityUtils.getCurrentUser();
-        User assignee = userRepository.findById(current.getId())
+        User assignee = userRepository.findById(SecurityUtils.getCurrentUser().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         task.setStatus(TaskStatus.IN_PROGRESS);
@@ -150,7 +148,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public void deleteTask(Long id) {
-        Task task = loadTaskForCurrentUser(id);
+        Task task = loadTask(id);
         taskRepository.delete(task);
         log.info("Task deleted: {}", task.getId());
     }
@@ -172,35 +170,14 @@ public class TaskServiceImpl implements TaskService {
         task.setDueDate(request.getDueDate());
     }
 
-    private Task loadTaskForCurrentUser(Long id) {
-        Task task = taskRepository.findById(id)
+    private Task loadTask(Long id) {
+        return taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
-        ensureAccessToProject(task.getProject());
-        return task;
     }
 
-    private Project loadProjectForCurrentUser(Long projectId) {
-        Project project = projectRepository.findById(projectId)
+    private Project loadProject(Long projectId) {
+        return projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
-        ensureAccessToProject(project);
-        return project;
-    }
-
-    private void ensureAccessToProject(Project project) {
-        User current = SecurityUtils.getCurrentUser();
-        if (current.getRole() == Role.ADMIN) {
-            return;
-        }
-
-        boolean owner = project.getOwner().getId().equals(current.getId());
-        boolean assignee = project.getTasks().stream()
-                .map(Task::getAssignee)
-                .filter(a -> a != null)
-                .anyMatch(a -> a.getId().equals(current.getId()));
-
-        if (!owner && !assignee) {
-            throw new ResourceNotFoundException("Project not found");
-        }
     }
 
     private TaskSummary mapToSummary(Task task) {
@@ -261,7 +238,7 @@ public class TaskServiceImpl implements TaskService {
                             dto.setFileName(attachment.getFileName());
                             dto.setContentType(attachment.getContentType());
                             dto.setUploadedAt(attachment.getUploadedAt());
-                            dto.setUrl("/api/attachments/" + attachment.getId());
+                            dto.setUrl("/api/tasks/" + task.getId() + "/attachments/" + attachment.getId());
                             return dto;
                         })
                         .collect(Collectors.toList())
