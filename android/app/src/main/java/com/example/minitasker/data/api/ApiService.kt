@@ -15,6 +15,7 @@ import com.example.minitasker.data.model.TaskResponseDto
 import com.example.minitasker.data.model.TaskSummaryDto
 import com.example.minitasker.data.model.UserDto
 import okhttp3.MultipartBody
+import okhttp3.ResponseBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -24,6 +25,8 @@ import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Streaming
+import retrofit2.http.Url
 
 interface ApiService {
 
@@ -100,6 +103,10 @@ interface ApiService {
         @Path("taskId") taskId: Long,
         @Part file: MultipartBody.Part
     ): AttachmentDto
+
+    @Streaming
+    @GET
+    suspend fun downloadAttachment(@Url url: String): retrofit2.Response<ResponseBody>
 
     // Stats
     @GET("/api/stats/tasks-by-status")

@@ -1,12 +1,7 @@
 package com.example.minitasker.ui.screen.taskdetail
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
-import android.net.Uri
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,10 +12,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -30,10 +27,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,7 +44,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -61,7 +60,7 @@ import com.example.minitasker.ui.theme.MiniTaskerTheme
 fun TaskDetailScreen(taskId: Long, viewModel: TaskDetailViewModel) {
     val state by viewModel.state.collectAsState()
     var commentText by remember { mutableStateOf("") }
-    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
     val filePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             viewModel.uploadAttachment(taskId, uri)
@@ -70,6 +69,14 @@ fun TaskDetailScreen(taskId: Long, viewModel: TaskDetailViewModel) {
 
     LaunchedEffect(taskId) {
         viewModel.loadTask(taskId)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is TaskDetailEvent.ShowMessage -> snackbarHostState.showSnackbar(event.message)
+            }
+        }
     }
 
     TaskDetailContent(
@@ -92,17 +99,10 @@ fun TaskDetailScreen(taskId: Long, viewModel: TaskDetailViewModel) {
                 commentText = ""
             }
         },
+        snackbarHostState = snackbarHostState,
+        downloadingAttachments = state.downloadingAttachments,
         onAttachClick = { filePicker.launch("*/*") },
-        onAttachmentClick = { attachment ->
-            val url = viewModel.resolveAttachmentUrl(attachment)
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                context.startActivity(intent)
-            } catch (e: ActivityNotFoundException) {
-                Toast.makeText(context, "Не удалось открыть файл", Toast.LENGTH_SHORT).show()
-            }
-        }
+        onAttachmentDownload = { attachment -> viewModel.downloadAttachment(attachment) }
     )
 }
 
@@ -115,14 +115,17 @@ private fun TaskDetailContent(
     onStatusSelected: (TaskStatus) -> Unit,
     onPrioritySelected: (TaskPriority) -> Unit,
     onAddComment: () -> Unit,
+    snackbarHostState: SnackbarHostState,
     onAttachClick: () -> Unit,
-    onAttachmentClick: (AttachmentDto) -> Unit,
+    downloadingAttachments: Set<Long>,
+    onAttachmentDownload: (AttachmentDto) -> Unit,
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(title = { Text(state.task?.title ?: "Задача") })
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         state.task?.let { task ->
             LazyColumn(
@@ -141,8 +144,9 @@ private fun TaskDetailContent(
                 item {
                     AttachmentsCard(
                         attachments = task.attachments,
+                        downloadingAttachments = downloadingAttachments,
                         onAttachClick = onAttachClick,
-                        onAttachmentClick = onAttachmentClick
+                        onAttachmentDownload = onAttachmentDownload
                     )
                 }
                 item {
@@ -275,8 +279,9 @@ private fun CommentsCard(comments: List<CommentDto>) {
 @Composable
 private fun AttachmentsCard(
     attachments: List<AttachmentDto>,
+    downloadingAttachments: Set<Long>,
     onAttachClick: () -> Unit,
-    onAttachmentClick: (AttachmentDto) -> Unit
+    onAttachmentDownload: (AttachmentDto) -> Unit
 ) {
     ElevatedCard(shape = MaterialTheme.shapes.large) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -286,19 +291,28 @@ private fun AttachmentsCard(
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     attachments.forEach { attachment ->
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onAttachmentClick(attachment) }
+                        val isDownloading = downloadingAttachments.contains(attachment.id)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = attachment.fileName, fontWeight = FontWeight.SemiBold)
-                            Text(text = attachment.uploadedAt, style = MaterialTheme.typography.bodySmall)
-                            Text(
-                                text = attachment.contentType,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.weight(1f)) {
+                                Text(text = attachment.fileName, fontWeight = FontWeight.SemiBold)
+                                Text(text = attachment.uploadedAt, style = MaterialTheme.typography.bodySmall)
+                                Text(
+                                    text = attachment.contentType,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            if (isDownloading) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                            } else {
+                                IconButton(onClick = { onAttachmentDownload(attachment) }) {
+                                    Icon(imageVector = Icons.Default.Download, contentDescription = "Скачать вложение")
+                                }
+                            }
                         }
                     }
                 }
@@ -368,7 +382,7 @@ private fun TaskDetailPreview() {
             CommentDto(2, 1, 2, "Иван", "Жду правки", "2024-04-21")
         )
         val attachments = listOf(
-            AttachmentDto(1, 1, "макет.pdf", "application/pdf", "https://example.com", "2024-04-18")
+            AttachmentDto(1, 1, "макет.pdf", "application/pdf", "https://example.com", "https://example.com/download", "2024-04-18")
         )
         val task = TaskResponseDto(
             id = 1,
@@ -384,6 +398,7 @@ private fun TaskDetailPreview() {
             comments = comments,
             attachments = attachments
         )
+        val snackbarHostState = remember { SnackbarHostState() }
         TaskDetailContent(
             state = TaskDetailUiState(task = task),
             commentText = "",
@@ -391,8 +406,10 @@ private fun TaskDetailPreview() {
             onStatusSelected = {},
             onPrioritySelected = {},
             onAddComment = {},
+            snackbarHostState = snackbarHostState,
             onAttachClick = {},
-            onAttachmentClick = {}
+            downloadingAttachments = emptySet(),
+            onAttachmentDownload = {}
         )
     }
 }

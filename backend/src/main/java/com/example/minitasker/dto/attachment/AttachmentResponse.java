@@ -8,6 +8,7 @@ public class AttachmentResponse {
     private String fileName;
     private String contentType;
     private String url;
+    private String downloadUrl;
     private OffsetDateTime uploadedAt;
 
     public Long getId() {
@@ -48,6 +49,14 @@ public class AttachmentResponse {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public String getDownloadUrl() {
+        return downloadUrl;
+    }
+
+    public void setDownloadUrl(String downloadUrl) {
+        this.downloadUrl = downloadUrl;
     }
 
     public OffsetDateTime getUploadedAt() {

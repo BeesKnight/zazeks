@@ -55,7 +55,8 @@ data class AttachmentDto(
     val taskId: Long?,
     val fileName: String,
     val contentType: String,
-    val url: String,
+    val url: String?,
+    val downloadUrl: String,
     val uploadedAt: String
 )
 

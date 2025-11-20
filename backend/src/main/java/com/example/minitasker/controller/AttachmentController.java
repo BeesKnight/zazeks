@@ -7,7 +7,9 @@ import java.util.List;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,17 +41,33 @@ public class AttachmentController {
     }
 
     @GetMapping("/tasks/{taskId}/attachments/{attachmentId}")
+    public ResponseEntity<Resource> legacyDownload(@PathVariable("taskId") Long taskId,
+                                                   @PathVariable("attachmentId") Long attachmentId) {
+        return buildDownloadResponse(taskId, attachmentId);
+    }
+
+    @GetMapping("/tasks/{taskId}/attachments/{attachmentId}/download")
     public ResponseEntity<Resource> downloadAttachment(@PathVariable("taskId") Long taskId,
                                                        @PathVariable("attachmentId") Long attachmentId) {
+        return buildDownloadResponse(taskId, attachmentId);
+    }
+
+    private ResponseEntity<Resource> buildDownloadResponse(Long taskId, Long attachmentId) {
         var download = attachmentService.downloadAttachment(taskId, attachmentId);
         MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
-        if (download.getContentType() != null) {
+        if (StringUtils.hasText(download.getContentType())) {
             mediaType = MediaType.parseMediaType(download.getContentType());
+        } else if (StringUtils.hasText(download.getFileName())) {
+            mediaType = MediaTypeFactory.getMediaType(download.getFileName())
+                    .orElse(MediaType.APPLICATION_OCTET_STREAM);
         }
         String fileName = download.getFileName() != null ? download.getFileName() : "attachment";
-        return ResponseEntity.ok()
+        ResponseEntity.BodyBuilder builder = ResponseEntity.ok()
                 .contentType(mediaType)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
-                .body(download.getResource());
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"");
+        if (download.getContentLength() != null) {
+            builder.contentLength(download.getContentLength());
+        }
+        return builder.body(download.getResource());
     }
 }
