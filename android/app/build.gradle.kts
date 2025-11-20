@@ -88,5 +88,5 @@ dependencies {
 
     implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.compose.material:material-pull-refresh")
+    implementation("androidx.compose.material:material-pull-refresh:1.6.0")
 }
