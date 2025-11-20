@@ -63,6 +63,24 @@ class ProjectsViewModel(
         }
     }
 
+    fun deleteProject(id: Long) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(loading = true)
+            when (val result = safeCall { projectRepository.deleteProject(id) }) {
+                is NetworkResult.Success -> {
+                    val updated = _state.value.projects.filterNot { it.id == id }
+                    _state.value = _state.value.copy(projects = updated, loading = false)
+                }
+                is NetworkResult.Error -> _state.value = _state.value.copy(loading = false, error = result.message)
+                NetworkResult.Loading -> _state.value = _state.value.copy(loading = true)
+            }
+        }
+    }
+
+    fun clearError() {
+        _state.value = _state.value.copy(error = null)
+    }
+
     fun logout(onComplete: () -> Unit) {
         viewModelScope.launch {
             authRepository.logout()

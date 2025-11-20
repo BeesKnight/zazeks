@@ -3,6 +3,7 @@ package com.example.minitasker.ui.screen.taskdetail
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.minitasker.data.model.AttachmentDto
 import com.example.minitasker.data.model.TaskRequest
 import com.example.minitasker.data.model.TaskResponseDto
 import com.example.minitasker.data.repository.NetworkResult
@@ -85,5 +86,9 @@ class TaskDetailViewModel(private val repository: TaskRepository) : ViewModel() 
                 NetworkResult.Loading -> Unit
             }
         }
+    }
+
+    fun resolveAttachmentUrl(attachment: AttachmentDto): String {
+        return repository.resolveAttachmentUrl(attachment)
     }
 }

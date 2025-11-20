@@ -12,8 +12,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,7 +43,7 @@ import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun StatsScreen(
     projectId: Long,
@@ -55,16 +58,19 @@ fun StatsScreen(
 
     StatsScreenContent(
         projectName = projectName,
-        state = state
+        state = state,
+        onRefresh = { viewModel.load(projectId) }
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 private fun StatsScreenContent(
     projectName: String,
-    state: StatsUiState
+    state: StatsUiState,
+    onRefresh: () -> Unit
 ) {
+    val refreshState = rememberPullRefreshState(refreshing = state.loading, onRefresh = onRefresh)
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -73,13 +79,17 @@ private fun StatsScreenContent(
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(paddingValues)
+                .pullRefresh(refreshState)
         ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
             item {
                 StatsCard(
                     title = "Статусы",
@@ -99,17 +109,6 @@ private fun StatsScreenContent(
                 )
             }
 
-            if (state.loading) {
-                item {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-            }
-
             state.error?.let { message ->
                 item {
                     Text(
@@ -118,6 +117,12 @@ private fun StatsScreenContent(
                     )
                 }
             }
+            }
+            PullRefreshIndicator(
+                refreshing = state.loading,
+                state = refreshState,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
         }
     }
 }

@@ -6,7 +6,6 @@ import com.example.minitasker.dto.project.ProjectResponse;
 import com.example.minitasker.exception.ResourceNotFoundException;
 import com.example.minitasker.model.Project;
 import com.example.minitasker.model.User;
-import com.example.minitasker.model.enums.Role;
 import com.example.minitasker.repository.ProjectRepository;
 import com.example.minitasker.repository.UserRepository;
 import com.example.minitasker.service.ProjectService;
@@ -36,20 +35,11 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<ProjectResponse> getProjects(String nameFilter, Pageable pageable) {
-        User current = SecurityUtils.getCurrentUser();
         Page<Project> page;
-        if (current.getRole() == Role.ADMIN) {
-            if (nameFilter != null && !nameFilter.isBlank()) {
-                page = projectRepository.findByNameContainingIgnoreCase(nameFilter, pageable);
-            } else {
-                page = projectRepository.findAll(pageable);
-            }
+        if (nameFilter != null && !nameFilter.isBlank()) {
+            page = projectRepository.findByNameContainingIgnoreCase(nameFilter, pageable);
         } else {
-            if (nameFilter != null && !nameFilter.isBlank()) {
-                page = projectRepository.findByOwnerAndNameContainingIgnoreCase(current, nameFilter, pageable);
-            } else {
-                page = projectRepository.findByOwner(current, pageable);
-            }
+            page = projectRepository.findAll(pageable);
         }
         return new PageResponse<>(
                 page.map(this::mapToDto).getContent(),
@@ -62,7 +52,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @Transactional(readOnly = true)
     public ProjectResponse getProject(Long id) {
-        Project project = loadProjectForCurrentUser(id);
+        Project project = loadProject(id);
         return mapToDto(project);
     }
 
@@ -80,7 +70,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public ProjectResponse updateProject(Long id, ProjectRequest request) {
-        Project project = loadProjectForCurrentUser(id);
+        Project project = loadProject(id);
         project.setName(request.getName());
         project.setDescription(request.getDescription());
         Project updated = projectRepository.save(project);
@@ -90,18 +80,13 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void deleteProject(Long id) {
-        Project project = loadProjectForCurrentUser(id);
+        Project project = loadProject(id);
         projectRepository.delete(project);
         log.info("Project deleted: {}", project.getId());
     }
 
-    private Project loadProjectForCurrentUser(Long id) {
-        User current = SecurityUtils.getCurrentUser();
-        if (current.getRole() == Role.ADMIN) {
-            return projectRepository.findById(id)
-                    .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
-        }
-        return projectRepository.findByIdAndOwner(id, current)
+    private Project loadProject(Long id) {
+        return projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
     }
 

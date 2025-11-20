@@ -13,7 +13,7 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 
 object ServiceLocator {
 
-    private const val BASE_URL = "http://45.155.207.118:9001"
+    const val BASE_URL = "http://45.155.207.118:9001"
 
     fun provideAuthPreferences(context: Context): AuthPreferences = AuthPreferences(context)
 
@@ -48,7 +48,7 @@ object ServiceLocator {
     }
 
     fun provideTaskRepository(context: Context): TaskRepository {
-        return TaskRepository(context, provideApiService(context))
+        return TaskRepository(context, provideApiService(context), BASE_URL)
     }
 
     fun provideStatsRepository(context: Context): StatsRepository {

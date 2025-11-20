@@ -11,19 +11,25 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -33,17 +39,19 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import com.example.minitasker.data.model.ProjectDto
 import com.example.minitasker.ui.components.LabeledTextField
 import com.example.minitasker.ui.theme.MiniTaskerTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun ProjectsScreen(
     viewModel: ProjectsViewModel,
@@ -54,9 +62,14 @@ fun ProjectsScreen(
     val state by viewModel.state.collectAsState()
     var projectName by remember { mutableStateOf("") }
     var projectDescription by remember { mutableStateOf("") }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        viewModel.refresh()
+    LaunchedEffect(state.error) {
+        state.error?.let { message ->
+            scope.launch { snackbarHostState.showSnackbar(message) }
+            viewModel.clearError()
+        }
     }
 
     if (state.showCreateDialog) {
@@ -87,11 +100,14 @@ fun ProjectsScreen(
         onProjectSelected = onProjectSelected,
         onShowStats = onShowStats,
         onCreateProject = { viewModel.toggleCreateDialog(true) },
-        onLogout = { viewModel.logout(onLoggedOut) }
+        onLogout = { viewModel.logout(onLoggedOut) },
+        onDeleteProject = { viewModel.deleteProject(it) },
+        onRefresh = { viewModel.refresh() },
+        snackbarHostState = snackbarHostState
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 private fun ProjectsScreenContent(
     state: ProjectsUiState,
@@ -99,7 +115,11 @@ private fun ProjectsScreenContent(
     onShowStats: (ProjectDto) -> Unit,
     onCreateProject: () -> Unit,
     onLogout: () -> Unit,
+    onDeleteProject: (Long) -> Unit,
+    onRefresh: () -> Unit,
+    snackbarHostState: SnackbarHostState,
 ) {
+    val refreshState = rememberPullRefreshState(refreshing = state.loading, onRefresh = onRefresh)
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -116,12 +136,14 @@ private fun ProjectsScreenContent(
             ExtendedFloatingActionButton(onClick = onCreateProject, text = { Text("Новый проект") }, icon = {
                 Icon(imageVector = Icons.Default.Add, contentDescription = null)
             })
-        }
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .pullRefresh(refreshState)
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -138,27 +160,45 @@ private fun ProjectsScreenContent(
                     }
                 }
                 items(state.projects, key = { it.id }) { project ->
-                    ProjectCard(project = project, onProjectSelected = onProjectSelected, onShowStats = onShowStats)
-                }
-                state.error?.let { errorMessage ->
-                    item {
-                        Text(
-                            text = errorMessage,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
+                    ProjectCard(
+                        project = project,
+                        onProjectSelected = onProjectSelected,
+                        onShowStats = onShowStats,
+                        onDeleteProject = onDeleteProject
+                    )
                 }
             }
-            if (state.loading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            }
+            PullRefreshIndicator(refreshing = state.loading, state = refreshState, modifier = Modifier.align(Alignment.TopCenter))
         }
     }
 }
 
 @Composable
-private fun ProjectCard(project: ProjectDto, onProjectSelected: (ProjectDto) -> Unit, onShowStats: (ProjectDto) -> Unit) {
+private fun ProjectCard(
+    project: ProjectDto,
+    onProjectSelected: (ProjectDto) -> Unit,
+    onShowStats: (ProjectDto) -> Unit,
+    onDeleteProject: (Long) -> Unit
+) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDeleteProject(project.id)
+                    showDeleteDialog = false
+                }) { Text("Удалить") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) { Text("Отмена") }
+            },
+            title = { Text("Удалить проект?") },
+            text = { Text("Удалить проект вместе со всеми задачами?") }
+        )
+    }
+
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -180,7 +220,10 @@ private fun ProjectCard(project: ProjectDto, onProjectSelected: (ProjectDto) -> 
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                IconButton(onClick = { showDeleteDialog = true }) {
+                    Icon(imageVector = Icons.Default.Delete, contentDescription = null)
+                }
                 TextButton(onClick = { onShowStats(project) }) {
                     Icon(imageVector = Icons.Default.PieChart, contentDescription = null)
                     Spacer(modifier = Modifier.width(4.dp))

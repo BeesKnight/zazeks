@@ -12,6 +12,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Person
@@ -49,7 +53,7 @@ import com.example.minitasker.data.model.TaskStatus
 import com.example.minitasker.data.model.TaskSummaryDto
 import com.example.minitasker.ui.theme.MiniTaskerTheme
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun TasksScreen(
     projectId: Long,
@@ -80,11 +84,12 @@ fun TasksScreen(
         onTaskSelected = onTaskSelected,
         onTakeTask = { taskId -> viewModel.takeTask(projectId, taskId) },
         onNewTaskStatusSelected = viewModel::selectNewTaskStatus,
-        onNewTaskPrioritySelected = viewModel::selectNewTaskPriority
+        onNewTaskPrioritySelected = viewModel::selectNewTaskPriority,
+        onRefresh = { viewModel.loadTasks(projectId) }
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalMaterialApi::class)
 @Composable
 private fun TasksScreenContent(
     projectName: String,
@@ -98,22 +103,28 @@ private fun TasksScreenContent(
     onTakeTask: (Long) -> Unit,
     onNewTaskStatusSelected: (TaskStatus) -> Unit,
     onNewTaskPrioritySelected: (TaskPriority) -> Unit,
+    onRefresh: () -> Unit,
 ) {
     val listState = rememberLazyListState()
+    val refreshState = rememberPullRefreshState(refreshing = state.loading, onRefresh = onRefresh)
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(title = { Text("Задачи проекта $projectName") })
         }
     ) { paddingValues ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            state = listState,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp)
+                .padding(paddingValues)
+                .pullRefresh(refreshState)
         ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                state = listState,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp)
+            ) {
             item {
                 FilterSection(
                     title = "Статусы",
@@ -167,22 +178,28 @@ private fun TasksScreenContent(
                     )
                 }
             }
-            items(state.items, key = { it.id }) { task ->
-                TaskItem(
-                    task = task,
-                    onClick = { onTaskSelected(task.id) },
-                    onTakeTask = if (task.status == TaskStatus.TODO) {
-                        { onTakeTask(task.id) }
-                    } else {
-                        null
+                items(state.items, key = { it.id }) { task ->
+                    TaskItem(
+                        task = task,
+                        onClick = { onTaskSelected(task.id) },
+                        onTakeTask = if (task.status == TaskStatus.TODO) {
+                            { onTakeTask(task.id) }
+                        } else {
+                            null
+                        }
+                    )
+                }
+                state.error?.let { message ->
+                    item {
+                        Text(text = message, color = MaterialTheme.colorScheme.error)
                     }
-                )
-            }
-            state.error?.let { message ->
-                item {
-                    Text(text = message, color = MaterialTheme.colorScheme.error)
                 }
             }
+            PullRefreshIndicator(
+                refreshing = state.loading,
+                state = refreshState,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
         }
     }
 }

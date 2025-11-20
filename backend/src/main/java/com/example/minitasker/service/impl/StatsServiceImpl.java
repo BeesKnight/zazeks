@@ -3,15 +3,11 @@ package com.example.minitasker.service.impl;
 import com.example.minitasker.dto.stats.KeyValueStat;
 import com.example.minitasker.exception.ResourceNotFoundException;
 import com.example.minitasker.model.Project;
-import com.example.minitasker.model.Task;
-import com.example.minitasker.model.User;
-import com.example.minitasker.model.enums.Role;
 import com.example.minitasker.model.enums.TaskPriority;
 import com.example.minitasker.model.enums.TaskStatus;
 import com.example.minitasker.repository.ProjectRepository;
 import com.example.minitasker.repository.TaskRepository;
 import com.example.minitasker.service.StatsService;
-import com.example.minitasker.util.SecurityUtils;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -52,24 +48,7 @@ public class StatsServiceImpl implements StatsService {
     }
 
     private Project loadProject(Long projectId) {
-        Project project = projectRepository.findById(projectId)
+        return projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
-        ensureAccess(project);
-        return project;
-    }
-
-    private void ensureAccess(Project project) {
-        User current = SecurityUtils.getCurrentUser();
-        if (current.getRole() == Role.ADMIN) {
-            return;
-        }
-        boolean owner = project.getOwner().getId().equals(current.getId());
-        boolean assigned = project.getTasks().stream()
-                .map(Task::getAssignee)
-                .filter(a -> a != null)
-                .anyMatch(a -> a.getId().equals(current.getId()));
-        if (!owner && !assigned) {
-            throw new ResourceNotFoundException("Project not found");
-        }
     }
 }
