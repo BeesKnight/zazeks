@@ -81,15 +81,11 @@ class TaskRepository(
     }
 
     fun resolveAttachmentUrl(attachment: AttachmentDto): String {
-        val url = attachment.downloadUrl?.takeIf { it.isNotBlank() }
-            ?: attachment.url?.takeIf { it.isNotBlank() }
-            ?: "/api/tasks/${attachment.taskId ?: ""}/attachments/${attachment.id}"
-
-        return if (url.startsWith("http")) {
-            url
-        } else {
-            baseUrl.trimEnd('/') + url
+        val url = attachment.downloadUrl
+        if (url.isBlank()) {
+            throw IllegalArgumentException("Ссылка для скачивания отсутствует")
         }
+        return if (url.startsWith("http")) url else baseUrl.trimEnd('/') + url
     }
 
     suspend fun downloadAttachment(attachment: AttachmentDto): String {

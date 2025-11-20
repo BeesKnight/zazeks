@@ -21,8 +21,8 @@ public class Attachment {
     @Column(nullable = false)
     private String contentType;
 
-    @Column(nullable = false)
-    private String filePath;
+    @Column(name = "storage_filename", nullable = false)
+    private String storageFileName;
 
     @Column(nullable = false)
     private OffsetDateTime uploadedAt = OffsetDateTime.now();
@@ -59,12 +59,12 @@ public class Attachment {
         this.contentType = contentType;
     }
 
-    public String getFilePath() {
-        return filePath;
+    public String getStorageFileName() {
+        return storageFileName;
     }
 
-    public void setFilePath(String filePath) {
-        this.filePath = filePath;
+    public void setStorageFileName(String storageFileName) {
+        this.storageFileName = storageFileName;
     }
 
     public OffsetDateTime getUploadedAt() {
