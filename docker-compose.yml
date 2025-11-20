@@ -28,7 +28,7 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
     ports:
-      - "9001:9001"
+      - "9001:8080"
     volumes:
       - ./attachments:/data/attachments
     depends_on:

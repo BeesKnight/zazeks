@@ -19,6 +19,6 @@ WORKDIR /app
 # Copy the Spring Boot fat jar from the build stage
 COPY --from=builder /app/target/minitasker-backend-0.0.1-SNAPSHOT.jar /app/app.jar
 
-EXPOSE 9001
+EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
